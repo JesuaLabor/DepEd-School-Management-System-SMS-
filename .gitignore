@@ -1,0 +1,60 @@
+# ==========================
+# Environment / Secrets
+# ==========================
+.env
+.env.local
+.env.*.local
+
+# ==========================
+# Go (Backend)
+# ==========================
+# Compiled binaries
+backend/bin/
+backend/*.exe
+backend/*.out
+
+# Vendor directory (if using Go modules vendor mode)
+backend/vendor/
+
+# Test output
+*.test
+*.prof
+
+# ==========================
+# Node / Frontend
+# ==========================
+frontend/node_modules/
+frontend/dist/
+frontend/.cache/
+frontend/.vite/
+
+# Yarn / npm
+frontend/yarn-error.log
+frontend/npm-debug.log*
+frontend/.pnp
+frontend/.pnp.js
+
+# TypeScript cache
+frontend/*.tsbuildinfo
+
+# ==========================
+# Docker
+# ==========================
+docker-compose.override.yml
+
+# ==========================
+# IDE / Editor
+# ==========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ==========================
+# Logs
+# ==========================
+*.log
+logs/
