@@ -31,7 +31,7 @@ func New(db *mongo.Database, cfg *config.Config) http.Handler {
 		w.Write([]byte(`{"status":"ok"}`))
 	})
 
-	authHandler        := handlers.NewAuthHandler(db, cfg.JWTSecret, cfg.JWTExpiryHours)
+	authHandler        := handlers.NewAuthHandler(db, cfg)
 	studentHandler     := handlers.NewStudentHandler(db)
 	userHandler        := handlers.NewUserHandler(db)
 	enrollmentHandler  := handlers.NewEnrollmentHandler(db)
@@ -42,8 +42,10 @@ func New(db *mongo.Database, cfg *config.Config) http.Handler {
 
 	r.Route("/api/v1", func(api chi.Router) {
 		// ── Public ────────────────────────────────────────────────────────────────
-		api.Post("/auth/login",    authHandler.Login)
-		api.Post("/auth/register", authHandler.Register)
+		api.Post("/auth/login",       authHandler.Login)
+		api.Post("/auth/register",    authHandler.Register)
+		api.Post("/auth/deped-sso",   authHandler.DepEdSSO)
+		api.Get("/auth/sso/config",   authHandler.GetSSOConfig)
 
 		// ── Protected ─────────────────────────────────────────────────────────────
 		api.Group(func(protected chi.Router) {

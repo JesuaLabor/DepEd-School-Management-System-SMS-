@@ -49,6 +49,12 @@ export const api = {
       request<{ status: string }>("/auth/change-password", {
         method: "POST", body: JSON.stringify({ currentPassword, newPassword }),
       }),
+    depedSSO: (payload: { idToken?: string; email?: string; firstName?: string; lastName?: string; provider?: string }) =>
+      request<{ token: string; user: User; isNewUser: boolean; provider: string }>("/auth/deped-sso", {
+        method: "POST", body: JSON.stringify(payload),
+      }),
+    getSSOConfig: () =>
+      request<{ googleClientId: string; allowedDomain: string; devMode: boolean }>("/auth/sso/config"),
   },
   users: {
     list:      ()                => request<User[]>("/users"),

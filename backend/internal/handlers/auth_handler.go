@@ -2,8 +2,11 @@ package handlers
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -13,21 +16,28 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/deped-sms/backend/internal/config"
 	"github.com/deped-sms/backend/internal/middleware"
 	"github.com/deped-sms/backend/internal/models"
 )
 
 type AuthHandler struct {
-	Users          *mongo.Collection
-	JWTSecret      string
-	JWTExpiryHours int
+	Users              *mongo.Collection
+	JWTSecret          string
+	JWTExpiryHours     int
+	GoogleClientID     string
+	GoogleClientSecret string
+	Env                string
 }
 
-func NewAuthHandler(db *mongo.Database, jwtSecret string, expiryHours int) *AuthHandler {
+func NewAuthHandler(db *mongo.Database, cfg *config.Config) *AuthHandler {
 	return &AuthHandler{
-		Users:          db.Collection("users"),
-		JWTSecret:      jwtSecret,
-		JWTExpiryHours: expiryHours,
+		Users:              db.Collection("users"),
+		JWTSecret:          cfg.JWTSecret,
+		JWTExpiryHours:     cfg.JWTExpiryHours,
+		GoogleClientID:     cfg.GoogleClientID,
+		GoogleClientSecret: cfg.GoogleClientSecret,
+		Env:                cfg.Env,
 	}
 }
 
@@ -258,4 +268,193 @@ func (h *AuthHandler) generateToken(user models.User) (string, error) {
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(h.JWTSecret))
+}
+
+// ── DepEd Single Sign-On (SSO) ────────────────────────────────────────────────
+
+type depedSSORequest struct {
+	IDToken   string `json:"idToken"`
+	Email     string `json:"email"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Provider  string `json:"provider"`
+}
+
+type depedSSOResponse struct {
+	Token     string      `json:"token"`
+	User      models.User `json:"user"`
+	IsNewUser bool        `json:"isNewUser"`
+	Provider  string      `json:"provider"`
+}
+
+type ssoConfigResponse struct {
+	GoogleClientID string `json:"googleClientId"`
+	AllowedDomain  string `json:"allowedDomain"`
+	DevMode        bool   `json:"devMode"`
+}
+
+func (h *AuthHandler) isDepEdEmail(email string) bool {
+	clean := strings.ToLower(strings.TrimSpace(email))
+	if strings.HasSuffix(clean, "@deped.gov.ph") || strings.Contains(clean, ".deped.gov.ph") {
+		return true
+	}
+	// In development environment, also allow local test accounts
+	if h.Env == "development" && (clean == "admin@deped.gov.ph" || strings.HasSuffix(clean, "@school.edu.ph")) {
+		return true
+	}
+	return false
+}
+
+func capitalize(s string) string {
+	if s == "" {
+		return ""
+	}
+	return strings.ToUpper(s[:1]) + strings.ToLower(s[1:])
+}
+
+// GetSSOConfig returns configuration options for SSO (client ID and allowed domain).
+func (h *AuthHandler) GetSSOConfig(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, ssoConfigResponse{
+		GoogleClientID: h.GoogleClientID,
+		AllowedDomain:  "deped.gov.ph",
+		DevMode:        h.Env == "development",
+	})
+}
+
+// DepEdSSO handles authentication and auto-provisioning via official DepEd Google Workspace.
+func (h *AuthHandler) DepEdSSO(w http.ResponseWriter, r *http.Request) {
+	var req depedSSORequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	email := strings.TrimSpace(strings.ToLower(req.Email))
+	firstName := strings.TrimSpace(req.FirstName)
+	lastName := strings.TrimSpace(req.LastName)
+
+	// If Google OAuth ID token is provided, verify it with Google's tokeninfo API
+	if req.IDToken != "" {
+		googleURL := "https://oauth2.googleapis.com/tokeninfo?id_token=" + url.QueryEscape(req.IDToken)
+		client := &http.Client{Timeout: 5 * time.Second}
+		resp, err := client.Get(googleURL)
+		if err != nil || resp.StatusCode != http.StatusOK {
+			writeError(w, http.StatusUnauthorized, "invalid Google authentication token")
+			return
+		}
+		defer resp.Body.Close()
+
+		var gToken struct {
+			Email         string `json:"email"`
+			EmailVerified string `json:"email_verified"`
+			GivenName     string `json:"given_name"`
+			FamilyName    string `json:"family_name"`
+			HostedDomain  string `json:"hd"`
+			Audience      string `json:"aud"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&gToken); err != nil {
+			writeError(w, http.StatusUnauthorized, "failed to decode token claims")
+			return
+		}
+
+		if gToken.EmailVerified != "true" && gToken.EmailVerified != "1" {
+			writeError(w, http.StatusUnauthorized, "Google email address is not verified")
+			return
+		}
+
+		email = strings.TrimSpace(strings.ToLower(gToken.Email))
+		if gToken.GivenName != "" {
+			firstName = gToken.GivenName
+		}
+		if gToken.FamilyName != "" {
+			lastName = gToken.FamilyName
+		}
+	}
+
+	if email == "" {
+		writeError(w, http.StatusBadRequest, "email is required")
+		return
+	}
+
+	// Strictly verify official DepEd domain (@deped.gov.ph)
+	if !h.isDepEdEmail(email) {
+		writeError(w, http.StatusForbidden, "Access restricted: Only official DepEd accounts (*@deped.gov.ph) can authenticate through DepEd Single Sign-On.")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	// 1. Check if user already exists
+	var user models.User
+	err := h.Users.FindOne(ctx, bson.M{"email": email}).Decode(&user)
+	if err == nil {
+		if !user.IsActive {
+			writeError(w, http.StatusForbidden, "your account has been disabled; please contact school administrator")
+			return
+		}
+
+		token, err := h.generateToken(user)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to generate authentication token")
+			return
+		}
+
+		writeJSON(w, http.StatusOK, depedSSOResponse{
+			Token:     token,
+			User:      user,
+			IsNewUser: false,
+			Provider:  "deped_google",
+		})
+		return
+	}
+
+	// 2. User does not exist -> Auto-provision new DepEd Teacher account!
+	if firstName == "" || lastName == "" {
+		prefix := strings.Split(email, "@")[0]
+		parts := strings.Split(prefix, ".")
+		if len(parts) >= 2 {
+			firstName = capitalize(parts[0])
+			lastName = capitalize(parts[1])
+		} else {
+			firstName = capitalize(prefix)
+			lastName = "Faculty"
+		}
+	}
+
+	// Generate a secure random password hash for the auto-provisioned account
+	randomBytes := make([]byte, 16)
+	_, _ = rand.Read(randomBytes)
+	hash, _ := bcrypt.GenerateFromPassword([]byte(hex.EncodeToString(randomBytes)), bcrypt.DefaultCost)
+
+	now := time.Now()
+	newUser := models.User{
+		ID:           primitive.NewObjectID(),
+		Email:        email,
+		PasswordHash: string(hash),
+		FirstName:    firstName,
+		LastName:     lastName,
+		Role:         models.RoleTeacher, // Default role for auto-provisioned DepEd faculty
+		IsActive:     true,
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+
+	if _, err := h.Users.InsertOne(ctx, newUser); err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to provision new user account")
+		return
+	}
+
+	token, err := h.generateToken(newUser)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to generate authentication token")
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, depedSSOResponse{
+		Token:     token,
+		User:      newUser,
+		IsNewUser: true,
+		Provider:  "deped_google",
+	})
 }
