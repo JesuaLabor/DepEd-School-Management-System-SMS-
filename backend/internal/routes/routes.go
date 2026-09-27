@@ -38,6 +38,7 @@ func New(db *mongo.Database, cfg *config.Config) http.Handler {
 	attendanceHandler  := handlers.NewAttendanceHandler(db)
 	sectionHandler     := handlers.NewSectionHandler(db)
 	gradeHandler       := handlers.NewGradeHandler(db)
+	schoolFormsHandler := handlers.NewSchoolFormsHandler(db)
 
 	r.Route("/api/v1", func(api chi.Router) {
 		// ── Public ────────────────────────────────────────────────────────────────
@@ -74,6 +75,9 @@ func New(db *mongo.Database, cfg *config.Config) http.Handler {
 
 			// Grading & Assessment (SF9)
 			protected.Mount("/grades", gradeHandler.Routes())
+
+			// DepEd School Forms Hub (SF2, SF10)
+			protected.Mount("/school-forms", schoolFormsHandler.Routes())
 		})
 	})
 

@@ -389,3 +389,58 @@ export interface LearnerSF9 {
   remarks?:        string;
   attendance:      AttendanceSummaryStats;
 }
+
+// ── DepEd School Forms (SF2, SF10) ───────────────────────────────────────────
+
+export interface LearnerMonthlyAttendance {
+  student:       StudentSummary;
+  dailyStatuses: Record<number, string>;
+  totalPresent:  number;
+  totalAbsent:   number;
+  totalLate:     number;
+  remarks?:      string;
+}
+
+export interface SF2MonthlySummary {
+  totalEnrolment:         number;
+  maleEnrolment:          number;
+  femaleEnrolment:        number;
+  totalSchoolDays:        number;
+  maleDaysPresent:        number;
+  femaleDaysPresent:      number;
+  totalDaysPresent:       number;
+  averageDailyAttendance: number;
+  attendancePercentage:   number;
+  consecutiveAbsentCount: number;
+}
+
+export interface SchoolFormSF2 {
+  section:        SectionWithAdviser;
+  month:          number;
+  monthName:      string;
+  year:           number;
+  schoolYear:     string;
+  daysInMonth:    number;
+  schoolDays:     number[];
+  maleLearners:   LearnerMonthlyAttendance[];
+  femaleLearners: LearnerMonthlyAttendance[];
+  summary:        SF2MonthlySummary;
+}
+
+export interface ScholasticYearRecord {
+  gradeLevel:     number;
+  schoolYear:     string;
+  sectionName:    string;
+  adviserName:    string;
+  grades:         GradeRecord[];
+  generalAverage?: number;
+  descriptor?:    string;
+  remarks?:       string;
+}
+
+export interface SchoolFormSF10 {
+  student:            Student;
+  scholasticHistory:  ScholasticYearRecord[];
+  currentGrade:       number;
+  graduationEligible: boolean;
+}

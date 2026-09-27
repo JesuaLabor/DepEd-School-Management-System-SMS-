@@ -75,7 +75,7 @@ export default function Dashboard() {
               { step: "2", title: "Track daily attendance",   desc: "Record daily attendance and monitor SARDO truancy risks in the Attendance module.",   done: true },
               { step: "3", title: "Create sections",          desc: "Organize classes, designate teacher advisers, and manage official SF1 sectioning.",   done: true },
               { step: "4", title: "Encode grades",            desc: "Teachers enter quarterly ratings (Q1-Q4) and generate DepEd SF9 progress report cards.", done: true },
-              { step: "5", title: "Generate School Forms",    desc: "Export SF1, SF2, SF9, and SF10 permanent school records.",                            done: false },
+              { step: "5", title: "Generate School Forms",    desc: "Export official SF1, SF2, SF9, and SF10 permanent school records.",                   done: true },
             ].map((item) => (
               <div key={item.step} style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
                 <div style={{

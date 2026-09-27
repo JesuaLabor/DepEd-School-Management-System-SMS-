@@ -8,6 +8,7 @@ import type {
   CreateSectionInput, AdviserSummary, Section,
   Subject, GradeRecord, SectionGradeSheetResponse,
   BatchQuarterRequest, LearnerSF9,
+  SchoolFormSF2, SchoolFormSF10,
 } from "@/types";
 
 const BASE_URL = "/api/v1";
@@ -188,6 +189,20 @@ export const api = {
     },
     update: (id: string, data: { q1?: number; q2?: number; q3?: number; q4?: number }) =>
       request<GradeRecord>(`/grades/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  },
+  schoolForms: {
+    sf2: (params: { sectionId: string; month: number; year: number }) => {
+      const p = new URLSearchParams({
+        sectionId: params.sectionId,
+        month:     String(params.month),
+        year:      String(params.year),
+      });
+      return request<SchoolFormSF2>(`/school-forms/sf2?${p}`);
+    },
+    sf10: (studentId: string) => {
+      const p = new URLSearchParams({ studentId });
+      return request<SchoolFormSF10>(`/school-forms/sf10?${p}`);
+    },
   },
 };
 

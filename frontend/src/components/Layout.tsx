@@ -59,6 +59,11 @@ const Icon = {
       <polyline points="10 9 9 9 8 9"/>
     </svg>
   ),
+  SchoolForms: () => (
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+    </svg>
+  ),
   Logout: () => (
     <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
@@ -106,6 +111,9 @@ export default function Layout() {
           </NavLink>
           <NavLink to="/grading" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
             <Icon.Grading /><span>Grading & SF9</span>
+          </NavLink>
+          <NavLink to="/school-forms" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
+            <Icon.SchoolForms /><span>School Forms (SF)</span>
           </NavLink>
 
           {isAdmin && (

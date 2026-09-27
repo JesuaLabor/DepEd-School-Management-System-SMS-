@@ -13,6 +13,7 @@ import SectionListPage    from "@/pages/sections/SectionListPage";
 import SectionDetailPage  from "@/pages/sections/SectionDetailPage";
 import GradingSheetPage   from "@/pages/grading/GradingSheetPage";
 import StudentSF9Page     from "@/pages/grading/StudentSF9Page";
+import SchoolFormsHubPage from "@/pages/school-forms/SchoolFormsHubPage";
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
               <Route path="/attendance"   element={<AttendancePage />} />
               <Route path="/grading"      element={<GradingSheetPage />} />
               <Route path="/sf9"          element={<StudentSF9Page />} />
+              <Route path="/school-forms" element={<SchoolFormsHubPage />} />
               <Route path="/profile"      element={<Profile />} />
 
               {/* Admin / Registrar only */}
