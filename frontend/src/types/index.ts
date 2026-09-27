@@ -313,3 +313,79 @@ export interface CreateSectionInput {
   room?:       string;
   maxCapacity: number;
 }
+
+// ── Grading & Assessment (SF9) ────────────────────────────────────────────────
+
+export interface Subject {
+  code:       string;
+  name:       string;
+  gradeLevel: number;
+  strand?:    Strand;
+  semester?:  number;
+}
+
+export interface GradeRecord {
+  id:          string;
+  studentId:   string;
+  sectionId:   string;
+  schoolYear:  string;
+  gradeLevel:  number;
+  subjectCode: string;
+  subjectName: string;
+  q1?:         number;
+  q2?:         number;
+  q3?:         number;
+  q4?:         number;
+  finalGrade?: number;
+  remarks?:    string;
+  encodedBy?:  string;
+  createdAt:   string;
+  updatedAt:   string;
+}
+
+export interface GradeSheetStats {
+  avgQ1:       number;
+  avgQ2:       number;
+  avgQ3:       number;
+  avgQ4:       number;
+  avgFinal:    number;
+  passedCount: number;
+  failedCount: number;
+  totalCount:  number;
+}
+
+export interface SectionGradeSheetResponse {
+  section:     Section;
+  subjectCode: string;
+  schoolYear:  string;
+  students:    StudentSummary[];
+  grades:      Record<string, GradeRecord>;
+  stats:       GradeSheetStats;
+}
+
+export interface BatchQuarterEntry {
+  studentId: string;
+  grade:     number | null;
+}
+
+export interface BatchQuarterRequest {
+  sectionId:   string;
+  subjectCode: string;
+  subjectName: string;
+  schoolYear:  string;
+  gradeLevel:  number;
+  quarter:     "q1" | "q2" | "q3" | "q4";
+  entries:     BatchQuarterEntry[];
+}
+
+export interface LearnerSF9 {
+  student:         Student;
+  section:         SectionWithAdviser;
+  schoolYear:      string;
+  gradeLevel:      number;
+  grades:          GradeRecord[];
+  generalAverage?: number;
+  descriptor?:     string;
+  remarks?:        string;
+  attendance:      AttendanceSummaryStats;
+}

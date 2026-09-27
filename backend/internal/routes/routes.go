@@ -37,6 +37,7 @@ func New(db *mongo.Database, cfg *config.Config) http.Handler {
 	enrollmentHandler  := handlers.NewEnrollmentHandler(db)
 	attendanceHandler  := handlers.NewAttendanceHandler(db)
 	sectionHandler     := handlers.NewSectionHandler(db)
+	gradeHandler       := handlers.NewGradeHandler(db)
 
 	r.Route("/api/v1", func(api chi.Router) {
 		// ── Public ────────────────────────────────────────────────────────────────
@@ -70,6 +71,9 @@ func New(db *mongo.Database, cfg *config.Config) http.Handler {
 
 			// Sections & Advisory
 			protected.Mount("/sections", sectionHandler.Routes())
+
+			// Grading & Assessment (SF9)
+			protected.Mount("/grades", gradeHandler.Routes())
 		})
 	})
 

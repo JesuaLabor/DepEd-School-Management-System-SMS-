@@ -128,5 +128,23 @@ func EnsureIndexes(ctx context.Context, db *mongo.Database) error {
 		Keys: bson.D{{Key: "section_id", Value: 1}},
 	})
 
+	// ── grades ─────────────────────────────────────────────────────────────────
+	gradeIndexes := []mongo.IndexModel{
+		// Unique grade record per student per subject per school year
+		{
+			Keys: bson.D{
+				{Key: "student_id",   Value: 1},
+				{Key: "subject_code", Value: 1},
+				{Key: "school_year",  Value: 1},
+			},
+			Options: options.Index().SetUnique(true),
+		},
+		{Keys: bson.D{{Key: "section_id", Value: 1}, {Key: "subject_code", Value: 1}, {Key: "school_year", Value: 1}}},
+		{Keys: bson.D{{Key: "student_id", Value: 1}, {Key: "school_year", Value: 1}}},
+	}
+	if _, err := db.Collection("grades").Indexes().CreateMany(ctx, gradeIndexes); err != nil {
+		return err
+	}
+
 	return nil
 }

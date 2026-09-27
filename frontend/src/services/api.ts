@@ -6,6 +6,8 @@ import type {
   BatchAttendanceRequest, AttendanceStatus,
   SectionWithAdviser, SectionRoster, SectionFilters,
   CreateSectionInput, AdviserSummary, Section,
+  Subject, GradeRecord, SectionGradeSheetResponse,
+  BatchQuarterRequest, LearnerSF9,
 } from "@/types";
 
 const BASE_URL = "/api/v1";
@@ -164,6 +166,28 @@ export const api = {
     },
     teachers: () =>
       request<{ data: AdviserSummary[]; total: number }>("/sections/teachers"),
+  },
+  grades: {
+    subjects: (gradeLevel: number, strand?: string) => {
+      const p = new URLSearchParams({ gradeLevel: String(gradeLevel) });
+      if (strand) p.set("strand", strand);
+      return request<{ gradeLevel: number; strand?: string; data: Subject[] }>(`/grades/subjects?${p}`);
+    },
+    sectionSheet: (sectionId: string, subjectCode: string, schoolYear?: string) => {
+      const p = new URLSearchParams({ subjectCode });
+      if (schoolYear) p.set("schoolYear", schoolYear);
+      return request<SectionGradeSheetResponse>(`/grades/section/${sectionId}/sheet?${p}`);
+    },
+    batchQuarter: (data: BatchQuarterRequest) =>
+      request<{ status: string; quarter: string; total: number }>("/grades/batch", {
+        method: "POST", body: JSON.stringify(data),
+      }),
+    studentSF9: (studentId: string, schoolYear?: string) => {
+      const p = schoolYear ? `?schoolYear=${schoolYear}` : "";
+      return request<LearnerSF9>(`/grades/student/${studentId}/sf9${p}`);
+    },
+    update: (id: string, data: { q1?: number; q2?: number; q3?: number; q4?: number }) =>
+      request<GradeRecord>(`/grades/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   },
 };
 
