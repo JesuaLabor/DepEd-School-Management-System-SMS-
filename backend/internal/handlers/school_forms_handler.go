@@ -104,7 +104,7 @@ func (h *SchoolFormsHandler) GetSF2(w http.ResponseWriter, r *http.Request) {
 	lastDay := firstDay.AddDate(0, 1, -1)
 	daysInMonth := lastDay.Day()
 
-	var schoolDays []int
+	schoolDays := []int{}
 	for d := 1; d <= daysInMonth; d++ {
 		curDate := time.Date(year, time.Month(month), d, 0, 0, 0, 0, time.UTC)
 		weekday := curDate.Weekday()
@@ -171,8 +171,8 @@ func (h *SchoolFormsHandler) GetSF2(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 5. Build Learner Rows & Compute Totals
-	var maleLearners []models.LearnerMonthlyAttendance
-	var femaleLearners []models.LearnerMonthlyAttendance
+	maleLearners := []models.LearnerMonthlyAttendance{}
+	femaleLearners := []models.LearnerMonthlyAttendance{}
 
 	maleDaysPresent := 0
 	femaleDaysPresent := 0

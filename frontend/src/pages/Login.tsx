@@ -92,6 +92,12 @@ export default function Login() {
               {loading ? "Signing in…" : "Sign in →"}
             </button>
           </form>
+
+          <div style={{ marginTop: "1.25rem", padding: "0.75rem", borderRadius: "0.375rem", background: "var(--bg-subtle, #f8fafc)", border: "1px dashed var(--border-color, #cbd5e1)", fontSize: "0.8125rem", color: "var(--text-muted, #64748b)" }}>
+            <span style={{ fontWeight: 600, color: "var(--text-main, #1e293b)" }}>Default Admin Credentials:</span><br />
+            Email: <code>admin@deped.gov.ph</code><br />
+            Password: <code>AdminPass123!</code>
+          </div>
         </div>
       </div>
     </div>

@@ -180,7 +180,7 @@ export default function SF2Viewer() {
             <div>Month of: <strong>{sf2.monthName} {sf2.year}</strong></div>
             <div>Grade & Section: <strong>Grade {sf2.section.gradeLevel} - {sf2.section.name}</strong></div>
             <div>Adviser: <strong>{sf2.section.adviser ? `${sf2.section.adviser.lastName}, ${sf2.section.adviser.firstName}` : "Unassigned"}</strong></div>
-            <div>School Days: <strong>{sf2.schoolDays.length} Days</strong></div>
+            <div>School Days: <strong>{sf2.schoolDays?.length ?? 0} Days</strong></div>
           </div>
 
           {/* ── Attendance Grid Table ── */}
@@ -192,7 +192,7 @@ export default function SF2Viewer() {
                   <th style={{ minWidth: "160px" }}>Learner Full Name</th>
                   {/* Days 1 to 31 */}
                   {Array.from({ length: sf2.daysInMonth }, (_, i) => i + 1).map((day) => {
-                    const isSchoolDay = sf2.schoolDays.includes(day);
+                    const isSchoolDay = (sf2.schoolDays || []).includes(day);
                     return (
                       <th
                         key={day}
@@ -217,18 +217,18 @@ export default function SF2Viewer() {
                 {/* ── MALE LEARNERS ── */}
                 <tr style={{ background: "rgba(59, 130, 246, 0.08)" }}>
                   <td colSpan={sf2.daysInMonth + 5} style={{ fontWeight: 700, color: "#60a5fa", padding: "4px 8px" }}>
-                    ♂ MALE LEARNERS ({sf2.maleLearners.length})
+                    ♂ MALE LEARNERS ({sf2.maleLearners?.length ?? 0})
                   </td>
                 </tr>
-                {sf2.maleLearners.map((row, idx) => renderLearnerRow(row, idx))}
+                {(sf2.maleLearners || []).map((row, idx) => renderLearnerRow(row, idx))}
 
                 {/* ── FEMALE LEARNERS ── */}
                 <tr style={{ background: "rgba(236, 72, 153, 0.08)" }}>
                   <td colSpan={sf2.daysInMonth + 5} style={{ fontWeight: 700, color: "#f472b6", padding: "4px 8px" }}>
-                    ♀ FEMALE LEARNERS ({sf2.femaleLearners.length})
+                    ♀ FEMALE LEARNERS ({sf2.femaleLearners?.length ?? 0})
                   </td>
                 </tr>
-                {sf2.femaleLearners.map((row, idx) => renderLearnerRow(row, idx))}
+                {(sf2.femaleLearners || []).map((row, idx) => renderLearnerRow(row, idx))}
               </tbody>
             </table>
           </div>
@@ -304,8 +304,8 @@ export default function SF2Viewer() {
         </td>
 
         {Array.from({ length: sf2.daysInMonth }, (_, i) => i + 1).map((day) => {
-          const isSchoolDay = sf2.schoolDays.includes(day);
-          const st = row.dailyStatuses[day];
+          const isSchoolDay = (sf2.schoolDays || []).includes(day);
+          const st = row.dailyStatuses?.[day];
 
           let mark = "";
           let color = "var(--clr-text-muted)";

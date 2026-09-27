@@ -36,6 +36,8 @@ frontend/.pnp.js
 
 # TypeScript cache
 frontend/*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
 
 # ==========================
 # Docker
