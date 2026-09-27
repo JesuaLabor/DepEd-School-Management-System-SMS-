@@ -1,5 +1,5 @@
 import type {
-  LoginResponse, User, Student, StudentListResponse,
+  LoginResponse, User, Role, Student, StudentListResponse,
   Enrollment, EnrollmentListResponse, EnrollmentSummary,
   AttendanceRecord, AttendanceWithStudent, AttendanceSummaryStats,
   DailyReportResponse, AbsenceReportRow, AttendanceFilters,
@@ -53,6 +53,20 @@ export const api = {
   users: {
     list:      ()                => request<User[]>("/users"),
     get:       (id: string)      => request<User>(`/users/${id}`),
+    create:    (data: { email: string; password?: string; firstName: string; lastName: string; role: Role }) =>
+      request<User>("/users", { method: "POST", body: JSON.stringify(data) }),
+    bulkImport: (payload: {
+      users: Array<{ firstName: string; lastName: string; email: string; password?: string; role?: Role }>;
+      skipExisting?: boolean;
+    }) =>
+      request<{
+        total: number;
+        createdCount: number;
+        skippedCount: number;
+        failedCount: number;
+        errors: Array<{ row: number; email: string; reason: string }>;
+        users: User[];
+      }>("/users/bulk-import", { method: "POST", body: JSON.stringify(payload) }),
     update:    (id: string, data: Partial<Pick<User, "firstName" | "lastName" | "role">>) =>
       request<User>(`/users/${id}`, { method: "PUT", body: JSON.stringify(data) }),
     setActive: (id: string, isActive: boolean) =>

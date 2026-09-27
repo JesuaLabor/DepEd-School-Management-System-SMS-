@@ -56,6 +56,10 @@ func New(db *mongo.Database, cfg *config.Config) http.Handler {
 			// Users (admin / registrar)
 			protected.Get("/users",
 				authmw.RequireRole("super_admin", "registrar")(http.HandlerFunc(userHandler.ListUsers)).ServeHTTP)
+			protected.Post("/users",
+				authmw.RequireRole("super_admin", "registrar")(http.HandlerFunc(userHandler.CreateUser)).ServeHTTP)
+			protected.Post("/users/bulk-import",
+				authmw.RequireRole("super_admin", "registrar")(http.HandlerFunc(userHandler.BulkImport)).ServeHTTP)
 			protected.Get("/users/{id}",  userHandler.GetUser)
 			protected.Put("/users/{id}",  userHandler.UpdateUser)
 			protected.Patch("/users/{id}/status",

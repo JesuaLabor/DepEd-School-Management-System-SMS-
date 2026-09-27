@@ -3,6 +3,7 @@ import { api } from "@/services/api";
 import type { User, Role } from "@/types";
 import { ROLE_LABELS } from "@/types";
 import { useAuth } from "@/context/AuthContext";
+import BulkImportModal from "./BulkImportModal";
 
 const ROLES: Role[] = ["super_admin", "registrar", "teacher", "student", "guardian"];
 
@@ -27,17 +28,8 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
     setError(null);
     setLoading(true);
     try {
-      const newUser = await api.auth.login("", "").catch(() => null); // just to satisfy TS; real call below
-      void newUser;
-      // Use the register endpoint via fetch directly (api.auth.register not exposed — call register route)
-      const res = await fetch("/api/v1/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed to create user");
-      onCreated(data as User);
+      const newUser = await api.users.create(form);
+      onCreated(newUser);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed");
     } finally {
@@ -104,6 +96,7 @@ export default function UserManagement() {
   const [search,  setSearch]  = useState("");
   const [roleFilter, setRoleFilter] = useState<Role | "">("");
   const [showCreate, setShowCreate] = useState(false);
+  const [showBulkImport, setShowBulkImport] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -133,6 +126,7 @@ export default function UserManagement() {
   });
 
   const isSuperAdmin = currentUser?.role === "super_admin";
+  const canManage = isSuperAdmin || currentUser?.role === "registrar";
 
   return (
     <>
@@ -156,11 +150,20 @@ export default function UserManagement() {
             <option value="">All roles</option>
             {ROLES.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
           </select>
-          <div style={{ marginLeft: "auto" }}>
-            {isSuperAdmin && (
-              <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
-                + Create User
-              </button>
+          <div style={{ marginLeft: "auto", display: "flex", gap: "0.5rem" }}>
+            {canManage && (
+              <>
+                <button
+                  className="btn btn-outline"
+                  onClick={() => setShowBulkImport(true)}
+                  style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}
+                >
+                  <span>📥</span> Bulk CSV Import
+                </button>
+                <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
+                  + Create User
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -236,6 +239,15 @@ export default function UserManagement() {
         <CreateUserModal
           onClose={() => setShowCreate(false)}
           onCreated={(u) => { setUsers(us => [u, ...us]); setShowCreate(false); }}
+        />
+      )}
+
+      {showBulkImport && (
+        <BulkImportModal
+          onClose={() => setShowBulkImport(false)}
+          onSuccess={(newUsers) => {
+            setUsers((prev) => [...newUsers, ...prev]);
+          }}
         />
       )}
     </>

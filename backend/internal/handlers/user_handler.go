@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -12,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/deped-sms/backend/internal/middleware"
 	"github.com/deped-sms/backend/internal/models"
@@ -156,3 +158,316 @@ func (h *UserHandler) SetActiveStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, map[string]interface{}{"id": targetID.Hex(), "isActive": req.IsActive})
 }
+
+// ── CreateUser ─────────────────────────────────────────────────────────────────
+// Allows super_admin and registrar to create an individual user.
+func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+	claims, _ := r.Context().Value(middleware.ClaimsContextKey).(jwt.MapClaims)
+	callerRole := models.Role(claims["role"].(string))
+
+	var req struct {
+		Email     string      `json:"email"`
+		Password  string      `json:"password"`
+		FirstName string      `json:"firstName"`
+		LastName  string      `json:"lastName"`
+		Role      models.Role `json:"role"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+	req.FirstName = strings.TrimSpace(req.FirstName)
+	req.LastName = strings.TrimSpace(req.LastName)
+
+	if req.Email == "" || req.FirstName == "" || req.LastName == "" {
+		writeError(w, http.StatusBadRequest, "email, firstName, and lastName are required")
+		return
+	}
+	if len(req.Password) < 8 {
+		writeError(w, http.StatusBadRequest, "password must be at least 8 characters")
+		return
+	}
+
+	validRoles := map[models.Role]bool{
+		models.RoleSuperAdmin: true,
+		models.RoleRegistrar:  true,
+		models.RoleTeacher:    true,
+		models.RoleStudent:    true,
+		models.RoleGuardian:   true,
+	}
+	if !validRoles[req.Role] {
+		req.Role = models.RoleTeacher
+	}
+
+	// Registrars cannot create super_admin accounts
+	if callerRole != models.RoleSuperAdmin && req.Role == models.RoleSuperAdmin {
+		writeError(w, http.StatusForbidden, "only super admins can create super admin accounts")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	count, err := h.Users.CountDocuments(ctx, bson.M{"email": req.Email})
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "database error")
+		return
+	}
+	if count > 0 {
+		writeError(w, http.StatusConflict, "email already in use")
+		return
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to hash password")
+		return
+	}
+
+	now := time.Now()
+	user := models.User{
+		ID:           primitive.NewObjectID(),
+		Email:        req.Email,
+		PasswordHash: string(hash),
+		FirstName:    req.FirstName,
+		LastName:     req.LastName,
+		Role:         req.Role,
+		IsActive:     true,
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+
+	if _, err := h.Users.InsertOne(ctx, user); err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to create user")
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, user)
+}
+
+// ── BulkImport ─────────────────────────────────────────────────────────────────
+
+type BulkImportItem struct {
+	FirstName string      `json:"firstName"`
+	LastName  string      `json:"lastName"`
+	Email     string      `json:"email"`
+	Password  string      `json:"password"`
+	Role      models.Role `json:"role"`
+}
+
+type BulkImportRequest struct {
+	Users        []BulkImportItem `json:"users"`
+	SkipExisting bool             `json:"skipExisting"`
+}
+
+type BulkImportErrorItem struct {
+	Row    int    `json:"row"`
+	Email  string `json:"email"`
+	Reason string `json:"reason"`
+}
+
+type BulkImportResponse struct {
+	Total        int                   `json:"total"`
+	CreatedCount int                   `json:"createdCount"`
+	SkippedCount int                   `json:"skippedCount"`
+	FailedCount  int                   `json:"failedCount"`
+	Errors       []BulkImportErrorItem `json:"errors"`
+	Users        []models.User         `json:"users"`
+}
+
+func (h *UserHandler) BulkImport(w http.ResponseWriter, r *http.Request) {
+	claims, _ := r.Context().Value(middleware.ClaimsContextKey).(jwt.MapClaims)
+	callerRole := models.Role(claims["role"].(string))
+
+	var req BulkImportRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if len(req.Users) == 0 {
+		writeError(w, http.StatusBadRequest, "no users provided in payload")
+		return
+	}
+
+	if len(req.Users) > 500 {
+		writeError(w, http.StatusBadRequest, "maximum 500 users can be imported at once")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+
+	// 1. Gather all emails to check existence in database in one single query
+	var emailsToCheck []string
+	for _, u := range req.Users {
+		cleanEmail := strings.TrimSpace(strings.ToLower(u.Email))
+		if cleanEmail != "" {
+			emailsToCheck = append(emailsToCheck, cleanEmail)
+		}
+	}
+
+	existingEmailMap := make(map[string]bool)
+	if len(emailsToCheck) > 0 {
+		cursor, err := h.Users.Find(ctx, bson.M{"email": bson.M{"$in": emailsToCheck}}, options.Find().SetProjection(bson.M{"email": 1}))
+		if err == nil {
+			var existingUsers []struct {
+				Email string `bson:"email"`
+			}
+			if err := cursor.All(ctx, &existingUsers); err == nil {
+				for _, eu := range existingUsers {
+					existingEmailMap[strings.ToLower(eu.Email)] = true
+				}
+			}
+			cursor.Close(ctx)
+		}
+	}
+
+	validRoles := map[models.Role]bool{
+		models.RoleSuperAdmin: true,
+		models.RoleRegistrar:  true,
+		models.RoleTeacher:    true,
+		models.RoleStudent:    true,
+		models.RoleGuardian:   true,
+	}
+
+	var documents []interface{}
+	createdUsers := []models.User{}
+	importErrors := []BulkImportErrorItem{}
+	batchEmailSeen := make(map[string]bool)
+	skippedCount := 0
+
+	now := time.Now()
+
+	for idx, item := range req.Users {
+		rowNum := idx + 1
+		email := strings.TrimSpace(strings.ToLower(item.Email))
+		firstName := strings.TrimSpace(item.FirstName)
+		lastName := strings.TrimSpace(item.LastName)
+		password := strings.TrimSpace(item.Password)
+		role := item.Role
+
+		// Basic validation
+		if email == "" {
+			importErrors = append(importErrors, BulkImportErrorItem{
+				Row:    rowNum,
+				Email:  "",
+				Reason: "Email address is required",
+			})
+			continue
+		}
+		if !strings.Contains(email, "@") || !strings.Contains(email, ".") {
+			importErrors = append(importErrors, BulkImportErrorItem{
+				Row:    rowNum,
+				Email:  email,
+				Reason: "Invalid email address format",
+			})
+			continue
+		}
+		if firstName == "" || lastName == "" {
+			importErrors = append(importErrors, BulkImportErrorItem{
+				Row:    rowNum,
+				Email:  email,
+				Reason: "First name and last name are required",
+			})
+			continue
+		}
+
+		// Role validation & authorization
+		if role == "" || !validRoles[role] {
+			role = models.RoleTeacher
+		}
+		if callerRole != models.RoleSuperAdmin && role == models.RoleSuperAdmin {
+			importErrors = append(importErrors, BulkImportErrorItem{
+				Row:    rowNum,
+				Email:  email,
+				Reason: "Registrars cannot import super_admin accounts",
+			})
+			continue
+		}
+
+		// Password handling
+		if len(password) < 8 {
+			importErrors = append(importErrors, BulkImportErrorItem{
+				Row:    rowNum,
+				Email:  email,
+				Reason: "Password must be at least 8 characters",
+			})
+			continue
+		}
+
+		// Duplicate within same batch
+		if batchEmailSeen[email] {
+			importErrors = append(importErrors, BulkImportErrorItem{
+				Row:    rowNum,
+				Email:  email,
+				Reason: "Duplicate email within the same import file",
+			})
+			continue
+		}
+		batchEmailSeen[email] = true
+
+		// Existing email in DB
+		if existingEmailMap[email] {
+			if req.SkipExisting {
+				skippedCount++
+				continue
+			}
+			importErrors = append(importErrors, BulkImportErrorItem{
+				Row:    rowNum,
+				Email:  email,
+				Reason: "Email is already registered in the system",
+			})
+			continue
+		}
+
+		// Hash password
+		hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			importErrors = append(importErrors, BulkImportErrorItem{
+				Row:    rowNum,
+				Email:  email,
+				Reason: "Failed to encrypt password",
+			})
+			continue
+		}
+
+		u := models.User{
+			ID:           primitive.NewObjectID(),
+			Email:        email,
+			PasswordHash: string(hash),
+			FirstName:    firstName,
+			LastName:     lastName,
+			Role:         role,
+			IsActive:     true,
+			CreatedAt:    now,
+			UpdatedAt:    now,
+		}
+
+		documents = append(documents, u)
+		createdUsers = append(createdUsers, u)
+	}
+
+	// Insert in bulk if any valid documents exist
+	if len(documents) > 0 {
+		_, err := h.Users.InsertMany(ctx, documents)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to insert users into database")
+			return
+		}
+	}
+
+	resp := BulkImportResponse{
+		Total:        len(req.Users),
+		CreatedCount: len(createdUsers),
+		SkippedCount: skippedCount,
+		FailedCount:  len(importErrors),
+		Errors:       importErrors,
+		Users:        createdUsers,
+	}
+
+	writeJSON(w, http.StatusOK, resp)
+}
+
