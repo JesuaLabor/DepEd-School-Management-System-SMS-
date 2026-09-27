@@ -4,6 +4,7 @@ import type { User, Role } from "@/types";
 import { ROLE_LABELS } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 import BulkImportModal from "./BulkImportModal";
+import ResetPasswordModal from "./ResetPasswordModal";
 
 const ROLES: Role[] = ["super_admin", "registrar", "teacher", "student", "guardian"];
 
@@ -97,6 +98,7 @@ export default function UserManagement() {
   const [roleFilter, setRoleFilter] = useState<Role | "">("");
   const [showCreate, setShowCreate] = useState(false);
   const [showBulkImport, setShowBulkImport] = useState(false);
+  const [resetPasswordUser, setResetPasswordUser] = useState<User | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -178,7 +180,7 @@ export default function UserManagement() {
                 <th>Role</th>
                 <th>Status</th>
                 <th>Created</th>
-                {isSuperAdmin && <th>Actions</th>}
+                {canManage && <th>Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -211,17 +213,33 @@ export default function UserManagement() {
                   <td style={{ color: "var(--clr-text-muted)", fontSize: "0.8rem" }}>
                     {new Date(u.createdAt).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })}
                   </td>
-                  {isSuperAdmin && (
+                  {canManage && (
                     <td>
-                      {u.id !== currentUser?.id && (
-                        <button
-                          className={`btn btn-sm ${u.isActive ? "btn-outline" : "btn-primary"}`}
-                          disabled={togglingId === u.id}
-                          onClick={() => toggleActive(u)}
-                        >
-                          {togglingId === u.id ? "…" : u.isActive ? "Disable" : "Enable"}
-                        </button>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {/* A registrar cannot reset or disable a super_admin */}
+                        {!(currentUser?.role === "registrar" && u.role === "super_admin") && (
+                          <>
+                            <button
+                              className="btn btn-sm btn-outline"
+                              onClick={() => setResetPasswordUser(u)}
+                              title="Reset Password"
+                              style={{ display: "flex", alignItems: "center", gap: "0.25rem", padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
+                            >
+                              <span>🔑</span> Reset
+                            </button>
+                            {u.id !== currentUser?.id && (
+                              <button
+                                className={`btn btn-sm ${u.isActive ? "btn-outline" : "btn-primary"}`}
+                                disabled={togglingId === u.id}
+                                onClick={() => toggleActive(u)}
+                                style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
+                              >
+                                {togglingId === u.id ? "…" : u.isActive ? "Disable" : "Enable"}
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </td>
                   )}
                 </tr>
@@ -248,6 +266,13 @@ export default function UserManagement() {
           onSuccess={(newUsers) => {
             setUsers((prev) => [...newUsers, ...prev]);
           }}
+        />
+      )}
+
+      {resetPasswordUser && (
+        <ResetPasswordModal
+          user={resetPasswordUser}
+          onClose={() => setResetPasswordUser(null)}
         />
       )}
     </>

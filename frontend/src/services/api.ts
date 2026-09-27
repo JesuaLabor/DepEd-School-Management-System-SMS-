@@ -79,6 +79,10 @@ export const api = {
       request<{ id: string; isActive: boolean }>(`/users/${id}/status`, {
         method: "PATCH", body: JSON.stringify({ isActive }),
       }),
+    resetPassword: (id: string, newPassword: string) =>
+      request<{ status: string; message: string; userId: string; email: string }>(`/users/${id}/reset-password`, {
+        method: "POST", body: JSON.stringify({ newPassword }),
+      }),
   },
   students: {
     list: (filters: StudentFilters = {}) => {

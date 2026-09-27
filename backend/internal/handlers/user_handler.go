@@ -127,7 +127,8 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, updated)
 }
 
-// SetActiveStatus enables or disables a user account. super_admin only.
+// SetActiveStatus enables or disables a user account.
+// Accessible by super_admin and registrar (registrars cannot disable super admins).
 type setActiveRequest struct {
 	IsActive bool `json:"isActive"`
 }
@@ -139,6 +140,9 @@ func (h *UserHandler) SetActiveStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	claims, _ := r.Context().Value(middleware.ClaimsContextKey).(jwt.MapClaims)
+	callerRole := models.Role(claims["role"].(string))
+
 	var req setActiveRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
@@ -147,6 +151,19 @@ func (h *UserHandler) SetActiveStatus(w http.ResponseWriter, r *http.Request) {
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
+
+	// If caller is registrar, ensure target is not a super_admin
+	if callerRole != models.RoleSuperAdmin {
+		var target models.User
+		if err := h.Users.FindOne(ctx, bson.M{"_id": targetID}).Decode(&target); err != nil {
+			writeError(w, http.StatusNotFound, "user not found")
+			return
+		}
+		if target.Role == models.RoleSuperAdmin {
+			writeError(w, http.StatusForbidden, "registrars cannot change the status of super admin accounts")
+			return
+		}
+	}
 
 	_, err = h.Users.UpdateOne(ctx,
 		bson.M{"_id": targetID},
@@ -157,6 +174,71 @@ func (h *UserHandler) SetActiveStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]interface{}{"id": targetID.Hex(), "isActive": req.IsActive})
+}
+
+// ── ResetPassword ──────────────────────────────────────────────────────────────
+// Allows super_admin and registrar to reset a user's password.
+type resetPasswordRequest struct {
+	NewPassword string `json:"newPassword"`
+}
+
+func (h *UserHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	targetID, err := primitive.ObjectIDFromHex(chi.URLParam(r, "id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid user id")
+		return
+	}
+
+	claims, _ := r.Context().Value(middleware.ClaimsContextKey).(jwt.MapClaims)
+	callerRole := models.Role(claims["role"].(string))
+
+	var req resetPasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if len(req.NewPassword) < 8 {
+		writeError(w, http.StatusBadRequest, "new password must be at least 8 characters")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	var target models.User
+	if err := h.Users.FindOne(ctx, bson.M{"_id": targetID}).Decode(&target); err != nil {
+		writeError(w, http.StatusNotFound, "user not found")
+		return
+	}
+
+	// Registrars cannot reset passwords of super admins
+	if callerRole != models.RoleSuperAdmin && target.Role == models.RoleSuperAdmin {
+		writeError(w, http.StatusForbidden, "registrars cannot reset passwords for super admin accounts")
+		return
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to hash password")
+		return
+	}
+
+	_, err = h.Users.UpdateOne(ctx,
+		bson.M{"_id": targetID},
+		bson.M{"$set": bson.M{"password_hash": string(hash), "updated_at": time.Now()}},
+	)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to reset password in database")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"status":  "success",
+		"message": "Password successfully reset",
+		"userId":  targetID.Hex(),
+		"email":   target.Email,
+	})
 }
 
 // ── CreateUser ─────────────────────────────────────────────────────────────────

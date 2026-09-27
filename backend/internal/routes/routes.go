@@ -65,7 +65,9 @@ func New(db *mongo.Database, cfg *config.Config) http.Handler {
 			protected.Get("/users/{id}",  userHandler.GetUser)
 			protected.Put("/users/{id}",  userHandler.UpdateUser)
 			protected.Patch("/users/{id}/status",
-				authmw.RequireRole("super_admin")(http.HandlerFunc(userHandler.SetActiveStatus)).ServeHTTP)
+				authmw.RequireRole("super_admin", "registrar")(http.HandlerFunc(userHandler.SetActiveStatus)).ServeHTTP)
+			protected.Post("/users/{id}/reset-password",
+				authmw.RequireRole("super_admin", "registrar")(http.HandlerFunc(userHandler.ResetPassword)).ServeHTTP)
 
 			// Students
 			protected.Mount("/students", studentHandler.Routes())
