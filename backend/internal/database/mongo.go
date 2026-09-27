@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -27,21 +28,47 @@ func Connect(uri, dbName string) *mongo.Database {
 	return client.Database(dbName)
 }
 
-// EnsureIndexes creates the core indexes the app relies on. Call once at startup.
+// EnsureIndexes creates the core indexes the app relies on. Safe to call on every startup.
 func EnsureIndexes(ctx context.Context, db *mongo.Database) error {
+	// ── users ──────────────────────────────────────────────────────────────────
 	usersCol := db.Collection("users")
-	_, err := usersCol.Indexes().CreateOne(ctx, mongo.IndexModel{
-		Keys:    map[string]int{"email": 1},
+	if _, err := usersCol.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "email", Value: 1}},
 		Options: options.Index().SetUnique(true),
-	})
-	if err != nil {
+	}); err != nil {
 		return err
 	}
 
+	// ── students ───────────────────────────────────────────────────────────────
 	studentsCol := db.Collection("students")
-	_, err = studentsCol.Indexes().CreateOne(ctx, mongo.IndexModel{
-		Keys:    map[string]int{"lrn": 1},
+
+	// Unique LRN
+	if _, err := studentsCol.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "lrn", Value: 1}},
 		Options: options.Index().SetUnique(true),
-	})
-	return err
+	}); err != nil {
+		return err
+	}
+
+	// Compound query index: grade_level + status (common filter combo)
+	if _, err := studentsCol.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "grade_level", Value: 1},
+			{Key: "status", Value: 1},
+		},
+	}); err != nil {
+		return err
+	}
+
+	// Name sort / search support
+	if _, err := studentsCol.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "last_name", Value: 1},
+			{Key: "first_name", Value: 1},
+		},
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }

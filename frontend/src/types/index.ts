@@ -20,23 +20,78 @@ export interface User {
   updatedAt: string;
 }
 
+// ── Student / SIS ────────────────────────────────────────────────────────────
+
 export type Strand = "" | "academic" | "tvl" | "sports" | "arts_design";
 
+export const STRAND_LABELS: Record<Strand, string> = {
+  "":           "—",
+  academic:     "Academic",
+  tvl:          "Technical-Vocational-Livelihood",
+  sports:       "Sports",
+  arts_design:  "Arts & Design",
+};
+
+export type EnrollmentStatus = "enrolled" | "dropped" | "transferred" | "graduated";
+
+export const STATUS_LABELS: Record<EnrollmentStatus, string> = {
+  enrolled:    "Enrolled",
+  dropped:     "Dropped",
+  transferred: "Transferred",
+  graduated:   "Graduated",
+};
+
+export interface Address {
+  houseNo?:    string;
+  street?:     string;
+  barangay:    string;
+  city:        string;
+  province:    string;
+  region?:     string;
+  postalCode?: string;
+}
+
+export interface Guardian {
+  name:         string;
+  relationship: string;
+  contactNo:    string;
+  email?:       string;
+  occupation?:  string;
+}
+
 export interface Student {
-  id:         string;
-  lrn:        string;
-  firstName:  string;
-  lastName:   string;
-  middleName?: string;
-  birthDate:  string;
-  sex:        string;
-  gradeLevel: number;
-  strand?:    Strand;
-  sectionId?: string;
-  schoolId:   string;
-  status:     "enrolled" | "dropped" | "transferred" | "graduated";
-  createdAt:  string;
-  updatedAt:  string;
+  id:           string;
+  lrn:          string;
+  firstName:    string;
+  lastName:     string;
+  middleName?:  string;
+  extName?:     string;
+  birthDate:    string;
+  birthPlace?:  string;
+  sex:          string;
+  civilStatus?: string;
+  religion?:    string;
+  motherTongue?: string;
+  nationality?: string;
+  contactNo?:   string;
+  email?:       string;
+  address:      Address;
+  gradeLevel:   number;
+  strand?:      Strand;
+  track?:       string;
+  sectionId?:   string;
+  schoolYear:   string;
+  status:       EnrollmentStatus;
+  remarks?:     string;
+  guardian:     Guardian;
+  schoolId?:    string;
+  createdAt:    string;
+  updatedAt:    string;
+}
+
+export interface StudentListResponse {
+  data:  Student[];
+  total: number;
 }
 
 export interface LoginResponse {
