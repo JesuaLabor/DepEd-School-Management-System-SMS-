@@ -104,3 +104,61 @@ export interface TokenPayload {
   role: Role;
   exp:  number;
 }
+
+// ── Enrollment ────────────────────────────────────────────────────────────────
+
+export type EnrollmentRecordStatus = "pending" | "approved" | "rejected";
+export type EnrollmentType = "new" | "returning" | "transferee" | "promotion";
+
+export const ENROLLMENT_STATUS_LABELS: Record<EnrollmentRecordStatus, string> = {
+  pending:  "Pending",
+  approved: "Approved",
+  rejected: "Rejected",
+};
+
+export const ENROLLMENT_TYPE_LABELS: Record<EnrollmentType, string> = {
+  new:        "New Student",
+  returning:  "Returning",
+  transferee: "Transferee",
+  promotion:  "Promotion",
+};
+
+export interface StudentSummary {
+  id:          string;
+  lrn:         string;
+  firstName:   string;
+  lastName:    string;
+  middleName?: string;
+  sex:         string;
+  birthDate:   string;
+}
+
+export interface Enrollment {
+  id:              string;
+  studentId:       string;
+  schoolYear:      string;
+  gradeLevel:      number;
+  strand?:         Strand;
+  track?:          string;
+  sectionId?:      string;
+  type:            EnrollmentType;
+  status:          EnrollmentRecordStatus;
+  remarks?:        string;
+  rejectedReason?: string;
+  processedBy?:    string;
+  processedAt?:    string;
+  schoolId?:       string;
+  createdAt:       string;
+  updatedAt:       string;
+  student?:        StudentSummary;
+}
+
+export interface EnrollmentListResponse {
+  data:  Enrollment[];
+  total: number;
+}
+
+export interface EnrollmentSummary {
+  summary:        { pending: number; approved: number; rejected: number; total: number };
+  gradeBreakdown: { grade: number; count: number }[];
+}
