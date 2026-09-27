@@ -162,3 +162,96 @@ export interface EnrollmentSummary {
   summary:        { pending: number; approved: number; rejected: number; total: number };
   gradeBreakdown: { grade: number; count: number }[];
 }
+
+// ── Attendance ────────────────────────────────────────────────────────────────
+
+export type AttendanceStatus = "present" | "absent" | "late" | "excused";
+export type AttendanceType   = "daily" | "subject";
+
+export const ATTENDANCE_STATUS_LABELS: Record<AttendanceStatus, string> = {
+  present: "Present",
+  absent:  "Absent",
+  late:    "Late",
+  excused: "Excused",
+};
+
+export const ATTENDANCE_STATUS_COLORS: Record<AttendanceStatus, string> = {
+  present: "var(--clr-success)",
+  absent:  "var(--clr-danger)",
+  late:    "var(--clr-warning)",
+  excused: "var(--clr-info)",
+};
+
+export interface AttendanceRecord {
+  id:           string;
+  studentId:    string;
+  date:         string;
+  type:         AttendanceType;
+  subjectName?: string;
+  status:       AttendanceStatus;
+  remarks?:     string;
+  gradeLevel:   number;
+  schoolYear:   string;
+  recordedBy?:  string;
+  createdAt:    string;
+  updatedAt:    string;
+}
+
+export interface AttendanceWithStudent extends AttendanceRecord {
+  student?: StudentSummary;
+}
+
+export interface AttendanceSummaryStats {
+  studentId:   string;
+  present:     number;
+  absent:      number;
+  late:        number;
+  excused:     number;
+  total:       number;
+  absenceRate: number;
+}
+
+export interface DailyReportResponse {
+  date:       string;
+  gradeLevel: number;
+  students:   StudentSummary[];
+  records:    Record<string, AttendanceWithStudent>;
+  summary:    { present: number; absent: number; late: number; excused: number; unrecorded: number };
+}
+
+export interface AbsenceReportRow {
+  _id:         string;
+  absences:    number;
+  grade_level: number;
+  last_absent: string;
+  student:     StudentSummary;
+}
+
+export interface AttendanceFilters {
+  studentId?:  string;
+  date?:       string;
+  dateFrom?:   string;
+  dateTo?:     string;
+  gradeLevel?: number;
+  status?:     AttendanceStatus;
+  type?:       AttendanceType;
+  schoolYear?: string;
+  limit?:      number;
+  skip?:       number;
+}
+
+export interface BatchAttendanceEntry {
+  studentId: string;
+  status:    AttendanceStatus;
+  remarks?:  string;
+}
+
+export interface BatchAttendanceRequest {
+  date:         string;
+  gradeLevel:   number;
+  schoolYear:   string;
+  type?:        AttendanceType;
+  subjectName?: string;
+  records:      BatchAttendanceEntry[];
+}
+

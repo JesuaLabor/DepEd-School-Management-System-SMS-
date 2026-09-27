@@ -8,6 +8,7 @@ import StudentList        from "@/pages/students/StudentList";
 import UserManagement     from "@/pages/users/UserManagement";
 import Profile            from "@/pages/Profile";
 import EnrollmentPage     from "@/pages/enrollment/EnrollmentPage";
+import AttendancePage     from "@/pages/attendance/AttendancePage";
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
             <Route element={<Layout />}>
               <Route index element={<Dashboard />} />
               <Route path="/students"   element={<StudentList />} />
+              <Route path="/attendance" element={<AttendancePage />} />
               <Route path="/profile"    element={<Profile />} />
 
               {/* Admin / Registrar only */}

@@ -31,10 +31,11 @@ func New(db *mongo.Database, cfg *config.Config) http.Handler {
 		w.Write([]byte(`{"status":"ok"}`))
 	})
 
-	authHandler       := handlers.NewAuthHandler(db, cfg.JWTSecret, cfg.JWTExpiryHours)
-	studentHandler    := handlers.NewStudentHandler(db)
-	userHandler       := handlers.NewUserHandler(db)
-	enrollmentHandler := handlers.NewEnrollmentHandler(db)
+	authHandler        := handlers.NewAuthHandler(db, cfg.JWTSecret, cfg.JWTExpiryHours)
+	studentHandler     := handlers.NewStudentHandler(db)
+	userHandler        := handlers.NewUserHandler(db)
+	enrollmentHandler  := handlers.NewEnrollmentHandler(db)
+	attendanceHandler  := handlers.NewAttendanceHandler(db)
 
 	r.Route("/api/v1", func(api chi.Router) {
 		// ── Public ────────────────────────────────────────────────────────────────
@@ -60,8 +61,11 @@ func New(db *mongo.Database, cfg *config.Config) http.Handler {
 			// Students
 			protected.Mount("/students", studentHandler.Routes())
 
-			// Enrollments (registrar + admin for mutations; any auth for reads)
+			// Enrollments
 			protected.Mount("/enrollments", enrollmentHandler.Routes())
+
+			// Attendance
+			protected.Mount("/attendance", attendanceHandler.Routes())
 		})
 	})
 

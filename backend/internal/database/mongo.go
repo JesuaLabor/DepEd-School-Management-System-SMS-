@@ -85,5 +85,25 @@ func EnsureIndexes(ctx context.Context, db *mongo.Database) error {
 		return err
 	}
 
+	// ── attendance ─────────────────────────────────────────────────────────────
+	attendanceIndexes := []mongo.IndexModel{
+		// Unique per student per date per type (+ subjectName for subject-type)
+		{
+			Keys: bson.D{
+				{Key: "student_id",   Value: 1},
+				{Key: "date",         Value: 1},
+				{Key: "type",         Value: 1},
+				{Key: "subject_name", Value: 1},
+			},
+		},
+		// Queries by date + grade (daily report)
+		{Keys: bson.D{{Key: "date", Value: 1}, {Key: "grade_level", Value: 1}}},
+		// Absence report
+		{Keys: bson.D{{Key: "student_id", Value: 1}, {Key: "school_year", Value: 1}, {Key: "status", Value: 1}}},
+	}
+	if _, err := db.Collection("attendance").Indexes().CreateMany(ctx, attendanceIndexes); err != nil {
+		return err
+	}
+
 	return nil
 }

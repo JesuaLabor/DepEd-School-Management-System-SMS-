@@ -1,6 +1,9 @@
 import type {
   LoginResponse, User, Student, StudentListResponse,
   Enrollment, EnrollmentListResponse, EnrollmentSummary,
+  AttendanceRecord, AttendanceWithStudent, AttendanceSummaryStats,
+  DailyReportResponse, AbsenceReportRow, AttendanceFilters,
+  BatchAttendanceRequest, AttendanceStatus,
 } from "@/types";
 
 const BASE_URL = "/api/v1";
@@ -95,4 +98,40 @@ export const api = {
       method: "POST", body: JSON.stringify(data),
     }),
   },
+  attendance: {
+    list: (filters: AttendanceFilters = {}) => {
+      const p = new URLSearchParams();
+      Object.entries(filters).forEach(([k, v]) => { if (v !== undefined && v !== "") p.set(k, String(v)); });
+      return request<{ data: AttendanceWithStudent[]; total: number }>(`/attendance?${p}`);
+    },
+    batchRecord: (data: BatchAttendanceRequest) =>
+      request<{ upserted: number; modified: number; total: number }>("/attendance/batch", {
+        method: "POST", body: JSON.stringify(data),
+      }),
+    dailyReport: (params: { date: string; gradeLevel: number; schoolYear?: string; type?: string }) => {
+      const p = new URLSearchParams();
+      Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== "") p.set(k, String(v)); });
+      return request<DailyReportResponse>(`/attendance/daily-report?${p}`);
+    },
+    studentHistory: (studentId: string, params: { dateFrom?: string; dateTo?: string; type?: string; schoolYear?: string } = {}) => {
+      const p = new URLSearchParams();
+      Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== "") p.set(k, String(v)); });
+      return request<{ data: AttendanceRecord[]; total: number }>(`/attendance/student/${studentId}?${p}`);
+    },
+    studentSummary: (studentId: string, params: { schoolYear?: string; type?: string } = {}) => {
+      const p = new URLSearchParams();
+      Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== "") p.set(k, String(v)); });
+      return request<AttendanceSummaryStats>(`/attendance/student/${studentId}/summary?${p}`);
+    },
+    absenceReport: (params: { schoolYear: string; gradeLevel?: number; threshold?: number }) => {
+      const p = new URLSearchParams();
+      Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== "") p.set(k, String(v)); });
+      return request<{ data: AbsenceReportRow[]; threshold: number; schoolYear: string }>(`/attendance/absence-report?${p}`);
+    },
+    update: (id: string, data: { status: AttendanceStatus; remarks?: string }) =>
+      request<AttendanceRecord>(`/attendance/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    remove: (id: string) =>
+      request<{ status: string }>(`/attendance/${id}`, { method: "DELETE" }),
+  },
 };
+
