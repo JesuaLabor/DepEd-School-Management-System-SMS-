@@ -9,8 +9,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/deped-sms/backend/internal/config"
-	authmw "github.com/deped-sms/backend/internal/middleware"
 	"github.com/deped-sms/backend/internal/handlers"
+	authmw "github.com/deped-sms/backend/internal/middleware"
 )
 
 // New builds the full HTTP router for the application.
@@ -20,25 +20,41 @@ func New(db *mongo.Database, cfg *config.Config) http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173"}, // Vite dev server
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type"},
 		AllowCredentials: true,
 	}))
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`{"status":"ok"}`))
 	})
 
-	authHandler := handlers.NewAuthHandler(db, cfg.JWTSecret, cfg.JWTExpiryHours)
+	authHandler    := handlers.NewAuthHandler(db, cfg.JWTSecret, cfg.JWTExpiryHours)
 	studentHandler := handlers.NewStudentHandler(db)
+	userHandler    := handlers.NewUserHandler(db)
 
 	r.Route("/api/v1", func(api chi.Router) {
-		api.Post("/auth/login", authHandler.Login)
+		// ── Public endpoints ────────────────────────────────────────────────────
+		api.Post("/auth/login",    authHandler.Login)
 		api.Post("/auth/register", authHandler.Register)
 
+		// ── Protected endpoints (require valid JWT) ──────────────────────────────
 		api.Group(func(protected chi.Router) {
 			protected.Use(authmw.RequireAuth(cfg.JWTSecret))
+
+			// Current user
+			protected.Get("/auth/me",                authHandler.Me)
+			protected.Post("/auth/change-password",  authHandler.ChangePassword)
+
+			// User management (admin / registrar)
+			protected.Get("/users",     authmw.RequireRole("super_admin", "registrar")(http.HandlerFunc(userHandler.ListUsers)).ServeHTTP)
+			protected.Get("/users/{id}", userHandler.GetUser)
+			protected.Put("/users/{id}", userHandler.UpdateUser)
+			protected.Patch("/users/{id}/status", authmw.RequireRole("super_admin")(http.HandlerFunc(userHandler.SetActiveStatus)).ServeHTTP)
+
+			// Students
 			protected.Mount("/students", studentHandler.Routes())
 		})
 	})

@@ -1,21 +1,23 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/services/api";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [error,    setError]    = useState<string | null>(null);
+  const [loading,  setLoading]  = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
-      const { token } = await api.auth.login(email, password);
-      localStorage.setItem("token", token);
+      const { token, user } = await api.auth.login(email, password);
+      login(token, user);
       navigate("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
@@ -25,26 +27,73 @@ export default function Login() {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ maxWidth: 320, display: "grid", gap: "0.75rem" }}>
-      <h2>Sign in</h2>
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-      />
-      {error && <p style={{ color: "crimson" }}>{error}</p>}
-      <button type="submit" disabled={loading}>
-        {loading ? "Signing in..." : "Sign in"}
-      </button>
-    </form>
+    <div className="login-page">
+      {/* Left panel */}
+      <div className="login-left">
+        <div className="login-brand">
+          <div className="login-brand-icon">D</div>
+          <div className="login-brand-text">
+            <strong>DepEd SMS</strong>
+            <span>School Management System</span>
+          </div>
+        </div>
+        <div className="login-hero">
+          <h1>Streamline your<br /><span>school administration</span></h1>
+          <p>
+            A centralized platform for managing student records, grades, attendance,
+            and DepEd-compliant reports for JHS and SHS schools.
+          </p>
+          <div className="login-features">
+            {[
+              "Role-based access for all staff",
+              "DepEd-compliant School Forms (SF1, SF9, SF10)",
+              "Real-time grade & attendance tracking",
+              "Works reliably with limited connectivity",
+            ].map((f) => (
+              <div key={f} className="login-feature">
+                <div className="login-feature-dot" />
+                {f}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Right panel — form */}
+      <div className="login-right">
+        <div className="login-form-wrap">
+          <h2>Welcome back</h2>
+          <p>Sign in to your account to continue</p>
+
+          {error && <div className="alert alert-error mb-4">{error}</div>}
+
+          <form className="login-form" onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label className="form-label" htmlFor="email">Email address</label>
+              <input
+                id="email" type="email" className="form-input"
+                placeholder="you@school.edu.ph"
+                value={email} onChange={(e) => setEmail(e.target.value)}
+                required autoFocus
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="password">Password</label>
+              <input
+                id="password" type="password" className="form-input"
+                placeholder="••••••••"
+                value={password} onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <button type="submit" className="login-btn" disabled={loading}>
+              {loading ? "Signing in…" : "Sign in →"}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 }

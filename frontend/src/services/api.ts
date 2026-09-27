@@ -1,4 +1,4 @@
-import type { LoginResponse, Student } from "@/types";
+import type { LoginResponse, User, Student } from "@/types";
 
 const BASE_URL = "/api/v1";
 
@@ -30,6 +30,23 @@ export const api = {
       request<LoginResponse>("/auth/login", {
         method: "POST",
         body: JSON.stringify({ email, password }),
+      }),
+    me: () => request<User>("/auth/me"),
+    changePassword: (currentPassword: string, newPassword: string) =>
+      request<{ status: string }>("/auth/change-password", {
+        method: "POST",
+        body: JSON.stringify({ currentPassword, newPassword }),
+      }),
+  },
+  users: {
+    list: () => request<User[]>("/users"),
+    get: (id: string) => request<User>(`/users/${id}`),
+    update: (id: string, data: Partial<Pick<User, "firstName" | "lastName" | "role">>) =>
+      request<User>(`/users/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    setActive: (id: string, isActive: boolean) =>
+      request<{ id: string; isActive: boolean }>(`/users/${id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ isActive }),
       }),
   },
   students: {
