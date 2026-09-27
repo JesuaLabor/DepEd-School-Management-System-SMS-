@@ -73,7 +73,7 @@ export default function Dashboard() {
             {[
               { step: "1", title: "Enroll students",          desc: "Register learners with 12-digit LRN and process Grade 7-12 enrollment / promotion.", done: true },
               { step: "2", title: "Track daily attendance",   desc: "Record daily attendance and monitor SARDO truancy risks in the Attendance module.",   done: true },
-              { step: "3", title: "Create sections",          desc: "Assign students to sections and grade levels (Section module — coming next).",       done: false },
+              { step: "3", title: "Create sections",          desc: "Organize classes, designate teacher advisers, and manage official SF1 sectioning.",   done: true },
               { step: "4", title: "Encode grades",            desc: "Teachers enter quarterly grades per subject (Grading module — coming next).",         done: false },
               { step: "5", title: "Generate School Forms",    desc: "Export SF2 daily attendance, SF9 report cards, and SF10 permanent records.",          done: false },
             ].map((item) => (

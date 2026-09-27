@@ -36,6 +36,7 @@ func New(db *mongo.Database, cfg *config.Config) http.Handler {
 	userHandler        := handlers.NewUserHandler(db)
 	enrollmentHandler  := handlers.NewEnrollmentHandler(db)
 	attendanceHandler  := handlers.NewAttendanceHandler(db)
+	sectionHandler     := handlers.NewSectionHandler(db)
 
 	r.Route("/api/v1", func(api chi.Router) {
 		// ── Public ────────────────────────────────────────────────────────────────
@@ -66,6 +67,9 @@ func New(db *mongo.Database, cfg *config.Config) http.Handler {
 
 			// Attendance
 			protected.Mount("/attendance", attendanceHandler.Routes())
+
+			// Sections & Advisory
+			protected.Mount("/sections", sectionHandler.Routes())
 		})
 	})
 

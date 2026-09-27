@@ -9,6 +9,8 @@ import UserManagement     from "@/pages/users/UserManagement";
 import Profile            from "@/pages/Profile";
 import EnrollmentPage     from "@/pages/enrollment/EnrollmentPage";
 import AttendancePage     from "@/pages/attendance/AttendancePage";
+import SectionListPage    from "@/pages/sections/SectionListPage";
+import SectionDetailPage  from "@/pages/sections/SectionDetailPage";
 
 export default function App() {
   return (
@@ -22,9 +24,11 @@ export default function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
               <Route index element={<Dashboard />} />
-              <Route path="/students"   element={<StudentList />} />
-              <Route path="/attendance" element={<AttendancePage />} />
-              <Route path="/profile"    element={<Profile />} />
+              <Route path="/students"     element={<StudentList />} />
+              <Route path="/sections"     element={<SectionListPage />} />
+              <Route path="/sections/:id" element={<SectionDetailPage />} />
+              <Route path="/attendance"   element={<AttendancePage />} />
+              <Route path="/profile"      element={<Profile />} />
 
               {/* Admin / Registrar only */}
               <Route element={<ProtectedRoute allowedRoles={["super_admin", "registrar"]} />}>

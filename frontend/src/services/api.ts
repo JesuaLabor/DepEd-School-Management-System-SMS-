@@ -4,6 +4,8 @@ import type {
   AttendanceRecord, AttendanceWithStudent, AttendanceSummaryStats,
   DailyReportResponse, AbsenceReportRow, AttendanceFilters,
   BatchAttendanceRequest, AttendanceStatus,
+  SectionWithAdviser, SectionRoster, SectionFilters,
+  CreateSectionInput, AdviserSummary, Section,
 } from "@/types";
 
 const BASE_URL = "/api/v1";
@@ -132,6 +134,36 @@ export const api = {
       request<AttendanceRecord>(`/attendance/${id}`, { method: "PUT", body: JSON.stringify(data) }),
     remove: (id: string) =>
       request<{ status: string }>(`/attendance/${id}`, { method: "DELETE" }),
+  },
+  sections: {
+    list: (filters: SectionFilters = {}) => {
+      const p = new URLSearchParams();
+      Object.entries(filters).forEach(([k, v]) => { if (v !== undefined && v !== "") p.set(k, String(v)); });
+      return request<{ data: SectionWithAdviser[]; total: number }>(`/sections?${p}`);
+    },
+    get: (id: string) =>
+      request<SectionWithAdviser>(`/sections/${id}`),
+    create: (data: CreateSectionInput) =>
+      request<Section>("/sections", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: Partial<CreateSectionInput>) =>
+      request<{ status: string }>(`/sections/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    remove: (id: string) =>
+      request<{ status: string }>(`/sections/${id}`, { method: "DELETE" }),
+    roster: (id: string) =>
+      request<SectionRoster>(`/sections/${id}/roster`),
+    assignStudents: (id: string, studentIds: string[]) =>
+      request<{ assigned: number; sectionId: string }>(`/sections/${id}/students`, {
+        method: "POST", body: JSON.stringify({ studentIds }),
+      }),
+    removeStudent: (id: string, studentId: string) =>
+      request<{ status: string }>(`/sections/${id}/students/${studentId}`, { method: "DELETE" }),
+    unassignedStudents: (params: { gradeLevel: number; schoolYear?: string; search?: string }) => {
+      const p = new URLSearchParams();
+      Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== "") p.set(k, String(v)); });
+      return request<{ data: Student[]; total: number }>(`/sections/unassigned-students?${p}`);
+    },
+    teachers: () =>
+      request<{ data: AdviserSummary[]; total: number }>("/sections/teachers"),
   },
 };
 

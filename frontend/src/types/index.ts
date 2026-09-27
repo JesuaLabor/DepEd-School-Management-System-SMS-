@@ -255,3 +255,61 @@ export interface BatchAttendanceRequest {
   records:      BatchAttendanceEntry[];
 }
 
+
+// ── Sections & Advisory ───────────────────────────────────────────────────────
+
+export interface AdviserSummary {
+  id:        string;
+  firstName: string;
+  lastName:  string;
+  email:     string;
+}
+
+export interface Section {
+  id:          string;
+  name:        string;
+  gradeLevel:  number;
+  schoolYear:  string;
+  strand?:     Strand;
+  track?:      string;
+  adviserId?:  string;
+  room?:       string;
+  maxCapacity: number;
+  schoolId?:   string;
+  createdAt:   string;
+  updatedAt:   string;
+}
+
+export interface SectionWithAdviser extends Section {
+  adviser?:      AdviserSummary;
+  studentCount:  number;
+  maleCount:     number;
+  femaleCount:   number;
+}
+
+export interface SectionRoster {
+  section:     SectionWithAdviser;
+  students:    Student[];
+  totalMale:   number;
+  totalFemale: number;
+  totalCount:  number;
+}
+
+export interface SectionFilters {
+  schoolYear?: string;
+  gradeLevel?: number;
+  strand?:     string;
+  adviserId?:  string;
+  search?:     string;
+}
+
+export interface CreateSectionInput {
+  name:        string;
+  gradeLevel:  number;
+  schoolYear:  string;
+  strand?:     Strand;
+  track?:      string;
+  adviserId?:  string;
+  room?:       string;
+  maxCapacity: number;
+}

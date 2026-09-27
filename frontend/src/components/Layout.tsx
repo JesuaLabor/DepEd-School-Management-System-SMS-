@@ -44,6 +44,12 @@ const Icon = {
       <path d="M9 16l2 2 4-4"/>
     </svg>
   ),
+  Sections: () => (
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <rect x="3" y="3" width="18" height="18" rx="2"/>
+      <path d="M3 9h18M9 21V9"/>
+    </svg>
+  ),
   Logout: () => (
     <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
@@ -82,6 +88,9 @@ export default function Layout() {
           </NavLink>
           <NavLink to="/students" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
             <Icon.Students /><span>Students</span>
+          </NavLink>
+          <NavLink to="/sections" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
+            <Icon.Sections /><span>Classes & Sections</span>
           </NavLink>
           <NavLink to="/attendance" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
             <Icon.Attendance /><span>Attendance</span>

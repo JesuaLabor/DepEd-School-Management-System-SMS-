@@ -105,5 +105,28 @@ func EnsureIndexes(ctx context.Context, db *mongo.Database) error {
 		return err
 	}
 
+	// ── sections ───────────────────────────────────────────────────────────────
+	sectionIndexes := []mongo.IndexModel{
+		// Unique section name per grade level and school year
+		{
+			Keys: bson.D{
+				{Key: "school_year", Value: 1},
+				{Key: "grade_level", Value: 1},
+				{Key: "name",        Value: 1},
+			},
+			Options: options.Index().SetUnique(true),
+		},
+		{Keys: bson.D{{Key: "grade_level", Value: 1}, {Key: "school_year", Value: 1}}},
+		{Keys: bson.D{{Key: "adviser_id",  Value: 1}}},
+	}
+	if _, err := db.Collection("sections").Indexes().CreateMany(ctx, sectionIndexes); err != nil {
+		return err
+	}
+
+	// Index students section_id
+	_, _ = students.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{{Key: "section_id", Value: 1}},
+	})
+
 	return nil
 }
