@@ -155,11 +155,14 @@ export default function SF2Viewer() {
             <div style={{ fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--clr-text-muted)", fontWeight: 600 }}>
               Republic of the Philippines · Department of Education
             </div>
+            <div style={{ fontSize: "0.78rem", color: "var(--clr-text-muted)", marginTop: "0.15rem" }}>
+              Region: <strong>National Capital Region (NCR)</strong> · Division: <strong>City Schools Division of Manila</strong> · School ID: <strong>301234</strong>
+            </div>
             <h2 style={{ margin: "0.35rem 0 0.15rem 0", fontSize: "1.25rem", fontWeight: 800 }}>
               School Form 2 (SF2) Daily Attendance Report of Learners
             </h2>
             <div style={{ fontSize: "0.8rem", color: "var(--clr-text-muted)" }}>
-              (Pursuant to DepEd Order No. 58, s. 2017)
+              Rizal National High School · (Pursuant to DepEd Order No. 58, s. 2017)
             </div>
           </div>
 

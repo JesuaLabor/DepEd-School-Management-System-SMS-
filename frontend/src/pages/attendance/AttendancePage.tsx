@@ -2,8 +2,9 @@ import { useState } from "react";
 import DailyAttendanceTab from "./DailyAttendanceTab";
 import StudentHistoryTab  from "./StudentHistoryTab";
 import AbsenceReportTab   from "./AbsenceReportTab";
+import AbsenceAlertsTab   from "./AbsenceAlertsTab";
 
-type Tab = "daily" | "history" | "report";
+type Tab = "daily" | "history" | "report" | "alerts";
 
 export default function AttendancePage() {
   const [activeTab, setActiveTab] = useState<Tab>("daily");
@@ -109,6 +110,30 @@ export default function AttendancePage() {
           </svg>
           Truancy & Dropout Alert
         </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("alerts")}
+          style={{
+            padding: "0.65rem 1.25rem",
+            fontSize: "0.875rem",
+            fontWeight: 600,
+            background: "none",
+            border: "none",
+            borderBottom: activeTab === "alerts" ? "2px solid var(--clr-primary)" : "2px solid transparent",
+            color: activeTab === "alerts" ? "var(--clr-primary)" : "var(--clr-text-muted)",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            transition: "all var(--transition)",
+          }}
+        >
+          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+          </svg>
+          Guardian SMS Alerts
+        </button>
       </div>
 
       {/* ── Active Tab View ── */}
@@ -116,6 +141,7 @@ export default function AttendancePage() {
         {activeTab === "daily" && <DailyAttendanceTab />}
         {activeTab === "history" && <StudentHistoryTab initialStudentId={inspectStudentId} />}
         {activeTab === "report" && <AbsenceReportTab onInspectStudent={handleInspectStudent} />}
+        {activeTab === "alerts" && <AbsenceAlertsTab />}
       </div>
     </div>
   );

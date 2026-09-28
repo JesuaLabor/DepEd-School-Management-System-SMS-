@@ -147,11 +147,14 @@ export default function SF10Viewer() {
             <div style={{ fontSize: "0.82rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--clr-text-muted)", fontWeight: 600 }}>
               Republic of the Philippines · Department of Education
             </div>
+            <div style={{ fontSize: "0.78rem", color: "var(--clr-text-muted)", marginTop: "0.15rem" }}>
+              Region: <strong>National Capital Region (NCR)</strong> · Division: <strong>City Schools Division of Manila</strong> · School ID: <strong>301234</strong>
+            </div>
             <h2 style={{ margin: "0.35rem 0 0.15rem 0", fontSize: "1.3rem", fontWeight: 800 }}>
               LEARNER'S PERMANENT ACADEMIC RECORD (SF10)
             </h2>
             <div style={{ fontSize: "0.78rem", color: "var(--clr-text-muted)" }}>
-              (Formerly Form 137 · Revised in accordance with DepEd Order No. 58, s. 2017)
+              Rizal National High School · (Formerly Form 137 · DepEd Order No. 58, s. 2017)
             </div>
           </div>
 

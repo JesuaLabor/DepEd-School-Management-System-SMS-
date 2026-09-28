@@ -39,9 +39,12 @@ func NewGradeHandler(db *mongo.Database) *GradeHandler {
 func (h *GradeHandler) Routes() chi.Router {
 	r := chi.NewRouter()
 	r.Get("/subjects", h.GetSubjects)
+	r.Get("/weights", h.GetGradingWeights)
+	r.Post("/calculate", h.CalculateQuarterGrade)
 	r.Get("/section/{sectionId}/sheet", h.GetSectionSheet)
 	r.Post("/batch", h.BatchSaveQuarter)
 	r.Get("/student/{studentId}/sf9", h.GetStudentSF9)
+	r.Get("/sf9/{studentId}", h.GetStudentSF9)
 	r.Put("/{id}", h.UpdateGrade)
 	return r
 }
@@ -59,10 +62,109 @@ func (h *GradeHandler) GetSubjects(w http.ResponseWriter, r *http.Request) {
 	strand := models.Strand(q.Get("strand"))
 	subjects := models.GetCurriculumSubjects(gl, strand)
 
+	semStr := q.Get("semester")
+	if semStr != "" {
+		if sem, err := strconv.Atoi(semStr); err == nil && (sem == 1 || sem == 2) {
+			var filtered []models.Subject
+			for _, s := range subjects {
+				if s.Semester == 0 || s.Semester == sem {
+					filtered = append(filtered, s)
+				}
+			}
+			subjects = filtered
+		}
+	}
+
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"gradeLevel": gl,
 		"strand":     strand,
+		"semester":   semStr,
 		"data":       subjects,
+	})
+}
+
+// ── GetGradingWeights ─────────────────────────────────────────────────────────
+// Query: gradeLevel (required), subjectCode (required), strand (optional)
+func (h *GradeHandler) GetGradingWeights(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	gl, _ := strconv.Atoi(q.Get("gradeLevel"))
+	subjectCode := q.Get("subjectCode")
+	strand := models.Strand(q.Get("strand"))
+
+	weights := models.GetDO8GradingWeights(gl, subjectCode, strand)
+	writeJSON(w, http.StatusOK, weights)
+}
+
+// ── CalculateQuarterGrade ─────────────────────────────────────────────────────
+type calculateGradeRequest struct {
+	GradeLevel  int     `json:"gradeLevel"`
+	SubjectCode string  `json:"subjectCode"`
+	Strand      string  `json:"strand"`
+	WWScore     float64 `json:"wwScore"`
+	WWTotal     float64 `json:"wwTotal"`
+	PTScore     float64 `json:"ptScore"`
+	PTTotal     float64 `json:"ptTotal"`
+	QAScore     float64 `json:"qaScore"`
+	QATotal     float64 `json:"qaTotal"`
+}
+
+func (h *GradeHandler) CalculateQuarterGrade(w http.ResponseWriter, r *http.Request) {
+	var req calculateGradeRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	weights := models.GetDO8GradingWeights(req.GradeLevel, req.SubjectCode, models.Strand(req.Strand))
+
+	var psWW, psPT, psQA float64
+	if req.WWTotal > 0 {
+		psWW = math.Round((req.WWScore/req.WWTotal)*10000) / 100
+	}
+	if req.PTTotal > 0 {
+		psPT = math.Round((req.PTScore/req.PTTotal)*10000) / 100
+	}
+	if req.QATotal > 0 {
+		psQA = math.Round((req.QAScore/req.QATotal)*10000) / 100
+	}
+
+	wsWW := math.Round(psWW*(float64(weights.WrittenWork)/100.0)*100) / 100
+	wsPT := math.Round(psPT*(float64(weights.PerformanceTask)/100.0)*100) / 100
+	wsQA := math.Round(psQA*(float64(weights.QuarterlyAssessment)/100.0)*100) / 100
+
+	initialGrade := math.Round((wsWW+wsPT+wsQA)*100) / 100
+	transmutedGrade := models.TransmuteInitialGrade(initialGrade)
+	descriptor := models.GradeDescriptor(transmutedGrade)
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"weights": weights,
+		"breakdown": map[string]interface{}{
+			"writtenWork": map[string]interface{}{
+				"score":  req.WWScore,
+				"total":  req.WWTotal,
+				"ps":     psWW,
+				"ws":     wsWW,
+				"weight": weights.WrittenWork,
+			},
+			"performanceTask": map[string]interface{}{
+				"score":  req.PTScore,
+				"total":  req.PTTotal,
+				"ps":     psPT,
+				"ws":     wsPT,
+				"weight": weights.PerformanceTask,
+			},
+			"quarterlyAssessment": map[string]interface{}{
+				"score":  req.QAScore,
+				"total":  req.QATotal,
+				"ps":     psQA,
+				"ws":     wsQA,
+				"weight": weights.QuarterlyAssessment,
+			},
+		},
+		"initialGrade":    initialGrade,
+		"transmutedGrade": transmutedGrade,
+		"descriptor":      descriptor,
+		"passed":          transmutedGrade >= 75.0,
 	})
 }
 

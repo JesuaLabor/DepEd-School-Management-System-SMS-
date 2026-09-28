@@ -59,3 +59,19 @@ type AttendanceSummary struct {
 	Total      int                `bson:"total"      json:"total"`
 	AbsenceRate float64           `bson:"absence_rate" json:"absenceRate"` // % absent
 }
+
+// AbsenceAlert records an automated SMS/email notification triggered on student absence.
+type AbsenceAlert struct {
+	ID              primitive.ObjectID `bson:"_id,omitempty"          json:"id"`
+	StudentID       primitive.ObjectID `bson:"student_id"             json:"studentId"`
+	StudentName     string             `bson:"student_name"           json:"studentName"`
+	LRN             string             `bson:"lrn"                    json:"lrn"`
+	GuardianName    string             `bson:"guardian_name"          json:"guardianName"`
+	GuardianContact string             `bson:"guardian_contact"       json:"guardianContact"`
+	Date            time.Time          `bson:"date"                   json:"date"`
+	Channel         string             `bson:"channel"                json:"channel"` // "sms" or "email"
+	Status          string             `bson:"status"                 json:"status"`  // "dispatched" or "simulated"
+	Message         string             `bson:"message"                json:"message"`
+	CreatedAt       time.Time          `bson:"created_at"             json:"createdAt"`
+}
+

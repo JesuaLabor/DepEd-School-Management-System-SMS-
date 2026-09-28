@@ -11,6 +11,7 @@ import { api } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import NewEnrollmentModal from "./NewEnrollmentModal";
 import PromotionWizard from "./PromotionWizard";
+import AdmissionsIntakeTab from "./AdmissionsIntakeTab";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function statusBadge(s: EnrollmentRecordStatus) {
@@ -42,6 +43,7 @@ export default function EnrollmentPage() {
   const { user } = useAuth();
   const canEdit = user?.role === "super_admin" || user?.role === "registrar";
 
+  const [activeTab,   setActiveTab]   = useState<"enrollments" | "intake">("enrollments");
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [total,       setTotal]       = useState(0);
   const [summary,     setSummary]     = useState<EnrollmentSummary | null>(null);
@@ -125,12 +127,52 @@ export default function EnrollmentPage() {
   return (
     <>
       <div className="page-header">
-        <h1>Enrollment Management</h1>
-        <p>Process student enrollment applications for the current school year.</p>
+        <h1>Enrollment & Admissions</h1>
+        <p>Process regular student enrollments and verify online intake applications for the school year.</p>
+
+        {/* Tab Buttons */}
+        <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem", borderBottom: "1px solid var(--clr-border, #e2e8f0)" }}>
+          <button
+            type="button"
+            onClick={() => setActiveTab("enrollments")}
+            style={{
+              padding: "0.6rem 1.25rem",
+              fontWeight: 600,
+              fontSize: "0.875rem",
+              background: "none",
+              border: "none",
+              borderBottom: activeTab === "enrollments" ? "2px solid var(--clr-primary, #1e40af)" : "2px solid transparent",
+              color: activeTab === "enrollments" ? "var(--clr-primary, #1e40af)" : "var(--clr-text-muted, #64748b)",
+              cursor: "pointer",
+            }}
+          >
+            📋 Regular Enrollments
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("intake")}
+            style={{
+              padding: "0.6rem 1.25rem",
+              fontWeight: 600,
+              fontSize: "0.875rem",
+              background: "none",
+              border: "none",
+              borderBottom: activeTab === "intake" ? "2px solid var(--clr-primary, #1e40af)" : "2px solid transparent",
+              color: activeTab === "intake" ? "var(--clr-primary, #1e40af)" : "var(--clr-text-muted, #64748b)",
+              cursor: "pointer",
+            }}
+          >
+            📬 Online Admissions Intake
+          </button>
+        </div>
       </div>
 
       <div className="page-body">
-        {error && <div className="alert alert-error mb-4">{error}</div>}
+        {activeTab === "intake" ? (
+          <AdmissionsIntakeTab />
+        ) : (
+          <>
+            {error && <div className="alert alert-error mb-4">{error}</div>}
 
         {/* ── Summary Stats ─────────────────────────────────────────────── */}
         <div className="stats-grid mb-6">
@@ -310,6 +352,8 @@ export default function EnrollmentPage() {
         <p className="text-muted text-sm mt-2">
           Showing {enrollments.length} of {total} enrollments
         </p>
+          </>
+        )}
       </div>
 
       {/* ── Modals ─────────────────────────────────────────────────────── */}

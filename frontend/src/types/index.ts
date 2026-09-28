@@ -368,6 +368,56 @@ export interface BatchQuarterEntry {
   grade:     number | null;
 }
 
+export interface GradingWeights {
+  writtenWork:         number;
+  performanceTask:     number;
+  quarterlyAssessment: number;
+  groupClassification: string;
+}
+
+export interface CalculateQuarterInput {
+  gradeLevel:  number;
+  subjectCode: string;
+  strand?:     string;
+  wwScore:     number;
+  wwTotal:     number;
+  ptScore:     number;
+  ptTotal:     number;
+  qaScore:     number;
+  qaTotal:     number;
+}
+
+export interface CalculateQuarterResponse {
+  weights: GradingWeights;
+  breakdown: {
+    writtenWork: {
+      score: number;
+      total: number;
+      ps: number;
+      ws: number;
+      weight: number;
+    };
+    performanceTask: {
+      score: number;
+      total: number;
+      ps: number;
+      ws: number;
+      weight: number;
+    };
+    quarterlyAssessment: {
+      score: number;
+      total: number;
+      ps: number;
+      ws: number;
+      weight: number;
+    };
+  };
+  initialGrade:    number;
+  transmutedGrade: number;
+  descriptor:      string;
+  passed:          boolean;
+}
+
 export interface BatchQuarterRequest {
   sectionId:   string;
   subjectCode: string;
@@ -443,4 +493,359 @@ export interface SchoolFormSF10 {
   scholasticHistory:  ScholasticYearRecord[];
   currentGrade:       number;
   graduationEligible: boolean;
+}
+
+// ── Analytics & Intelligence Dashboard ────────────────────────────────────────
+
+export interface GradeLevelMetric {
+  gradeLevel: number;
+  label:      string;
+  total:      number;
+  male:       number;
+  female:     number;
+}
+
+export interface TrackStrandMetric {
+  strand:     string;
+  track:      string;
+  count:      number;
+  percentage: number;
+}
+
+export interface DailyAttendanceMetric {
+  date:           string;
+  present:        number;
+  absent:         number;
+  late:           number;
+  excused:        number;
+  total:          number;
+  attendanceRate: number;
+}
+
+export interface GradePerformanceMetric {
+  outstanding:        number;
+  verySatisfactory:   number;
+  satisfactory:       number;
+  fairlySatisfactory: number;
+  didNotMeet:         number;
+  totalGrades:        number;
+  passingRate:        number;
+}
+
+export interface SARDORiskLearner {
+  studentId:  string;
+  lrn:        string;
+  firstName:  string;
+  lastName:   string;
+  gradeLevel: number;
+  sex:        string;
+  absences:   number;
+  riskLevel:  string;
+}
+
+export interface AnalyticsOverview {
+  summary: {
+    totalStudents:      number;
+    enrolledStudents:   number;
+    jhsCount:           number;
+    shsCount:           number;
+    totalMale:          number;
+    totalFemale:        number;
+    facultyCount:       number;
+    sectionsCount:      number;
+    attendanceRate:     number;
+    criticalSardoCount: number;
+    moderateRiskCount:  number;
+  };
+  gradeLevelDistribution:  GradeLevelMetric[];
+  trackStrandDistribution: TrackStrandMetric[];
+  recentAttendanceTrend:   DailyAttendanceMetric[];
+  gradePerformance:        GradePerformanceMetric;
+  recentSardoRisks:        SARDORiskLearner[];
+}
+
+// ── Communication & Announcements ─────────────────────────────────────────────
+
+export type AnnouncementScope = "school_wide" | "jhs" | "shs" | "grade_level" | "section";
+export type AnnouncementPriority = "normal" | "urgent" | "advisory";
+
+export interface Announcement {
+  id:             string;
+  title:          string;
+  content:        string;
+  authorId:       string;
+  authorName:     string;
+  authorRole:     Role;
+  scope:          AnnouncementScope;
+  targetGrade?:   number;
+  targetSection?: string;
+  sectionName?:   string;
+  priority:       AnnouncementPriority;
+  isPinned:       boolean;
+  createdAt:      string;
+  updatedAt:      string;
+}
+
+export interface CreateAnnouncementInput {
+  title:          string;
+  content:        string;
+  scope:          AnnouncementScope;
+  targetGrade?:   number;
+  targetSection?: string;
+  priority:       AnnouncementPriority;
+  isPinned:       boolean;
+}
+
+export interface AnnouncementListResponse {
+  data:  Announcement[];
+  total: number;
+  limit: number;
+  skip:  number;
+}
+
+export interface AnnouncementFilters {
+  scope?:      AnnouncementScope;
+  priority?:   AnnouncementPriority;
+  gradeLevel?: number;
+  sectionId?:  string;
+  search?:     string;
+  limit?:      number;
+  skip?:       number;
+}
+
+// ── Class Scheduling & Teacher Subject Loads ──────────────────────────────────
+
+export type DayOfWeek = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday";
+
+export interface ScheduleSlot {
+  id:          string;
+  sectionId:   string;
+  sectionName?: string;
+  gradeLevel:  number;
+  subjectCode: string;
+  subjectName: string;
+  teacherId:   string;
+  teacherName: string;
+  dayOfWeek:   DayOfWeek;
+  startTime:   string; // "HH:MM"
+  endTime:     string; // "HH:MM"
+  room?:       string;
+  schoolYear:  string;
+  semester?:   number;
+  createdAt:   string;
+  updatedAt:   string;
+}
+
+export interface CreateScheduleSlotInput {
+  sectionId:   string;
+  subjectCode: string;
+  subjectName: string;
+  teacherId:   string;
+  dayOfWeek:   DayOfWeek;
+  startTime:   string;
+  endTime:     string;
+  room?:       string;
+  semester?:   number;
+}
+
+export interface SectionScheduleResponse {
+  sectionId: string;
+  slots:     ScheduleSlot[];
+  total:     number;
+}
+
+export interface TeacherLoadSummary {
+  teacherId:   string;
+  teacherName: string;
+  email:       string;
+  totalSlots:  number;
+  totalHours:  number;
+  slots:       ScheduleSlot[];
+}
+
+// ── Dedicated Learner & Parent/Guardian Portal ────────────────────────────────
+
+export interface PortalStudentSummary {
+  student:         Student;
+  section?:        SectionWithAdviser;
+  attendance:      AttendanceSummaryStats;
+  grades:          GradeRecord[];
+  generalAverage?: number;
+  descriptor?:     string;
+}
+
+export interface PortalMyResponse {
+  user:      User;
+  role:      Role;
+  learner?:  PortalStudentSummary;
+  children?: PortalStudentSummary[];
+}
+
+export interface StudentOverviewResponse {
+  summary:       PortalStudentSummary;
+  schedule:      ScheduleSlot[];
+  announcements: Announcement[];
+}
+
+// ── Online Admissions & Application Intake ────────────────────────────────────
+
+export type ApplicationStatus = "submitted" | "under_review" | "approved" | "rejected";
+
+export interface AdmissionApplication {
+  id:                string;
+  applicationNo:     string;
+  lrn?:              string;
+  hasLrn:            boolean;
+  firstName:         string;
+  lastName:          string;
+  middleName?:       string;
+  extName?:          string;
+  birthDate:         string;
+  birthPlace?:       string;
+  sex:               string;
+  civilStatus?:      string;
+  religion?:         string;
+  motherTongue?:     string;
+  nationality?:      string;
+  contactNo?:        string;
+  email?:            string;
+  psaBirthCertNo?:   string;
+  address:           Address;
+  enrollmentType:    EnrollmentType;
+  targetGradeLevel:  number;
+  strand?:           Strand;
+  track?:            string;
+  previousSchool?:   string;
+  previousSchoolId?: string;
+  schoolYear:        string;
+  guardian:          Guardian;
+  status:            ApplicationStatus;
+  reviewRemarks?:    string;
+  reviewedBy?:       string;
+  reviewedAt?:       string;
+  createdStudentId?: string;
+  createdAt:         string;
+  updatedAt:         string;
+}
+
+export interface ApplyAdmissionInput {
+  lrn?:              string;
+  hasLrn:            boolean;
+  firstName:         string;
+  lastName:          string;
+  middleName?:       string;
+  extName?:          string;
+  birthDate:         string;
+  birthPlace?:       string;
+  sex:               string;
+  civilStatus?:      string;
+  religion?:         string;
+  motherTongue?:     string;
+  nationality?:      string;
+  contactNo?:        string;
+  email?:            string;
+  psaBirthCertNo?:   string;
+  address:           Address;
+  enrollmentType?:   EnrollmentType;
+  targetGradeLevel:  number;
+  strand?:           Strand;
+  track?:            string;
+  previousSchool?:   string;
+  previousSchoolId?: string;
+  schoolYear?:       string;
+  guardian:          Guardian;
+}
+
+export interface AdmissionListResponse {
+  data:  AdmissionApplication[];
+  total: number;
+  limit: number;
+  skip:  number;
+}
+
+export interface AdmissionFilters {
+  status?:     ApplicationStatus;
+  gradeLevel?: number;
+  schoolYear?: string;
+  search?:     string;
+  limit?:      number;
+  skip?:       number;
+}
+
+// ── Messaging & Absence Alerts ───────────────────────────────────────────────
+
+export interface ParticipantSummary {
+  id:        string;
+  email:     string;
+  firstName: string;
+  lastName:  string;
+  role:      Role;
+}
+
+export interface Conversation {
+  id:               string;
+  participantIds:   string[];
+  subject:          string;
+  lastMessage:      string;
+  lastMessageAt:    string;
+  lastSenderId:     string;
+  unreadCount:      number;
+  schoolId?:        string;
+  createdAt:        string;
+  updatedAt:        string;
+  otherParticipant?: ParticipantSummary;
+}
+
+export interface Message {
+  id:             string;
+  conversationId: string;
+  senderId:       string;
+  senderName:     string;
+  senderRole:     Role;
+  recipientId:    string;
+  content:        string;
+  isRead:         boolean;
+  readAt?:        string;
+  createdAt:      string;
+}
+
+export interface ConversationDetailResponse {
+  conversation: Conversation;
+  messages:     Message[];
+}
+
+export interface StartConversationInput {
+  recipientId: string;
+  subject?:    string;
+  content:     string;
+}
+
+export interface SendReplyInput {
+  content: string;
+}
+
+export interface RecipientOption {
+  id:        string;
+  email:     string;
+  firstName: string;
+  lastName:  string;
+  role:      Role;
+}
+
+export interface AbsenceAlert {
+  id:              string;
+  attendanceId?:   string;
+  studentId:       string;
+  studentLrn?:     string;
+  lrn?:            string;
+  studentName:     string;
+  guardianName:    string;
+  guardianContact: string;
+  date:            string;
+  channel:         "sms" | "email" | string;
+  message:         string;
+  status:          "sent" | "delivered" | "failed" | "queued" | "dispatched" | "simulated" | string;
+  providerRef?:    string;
+  sentAt?:         string;
+  createdAt:       string;
 }

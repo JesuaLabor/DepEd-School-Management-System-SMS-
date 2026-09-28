@@ -148,8 +148,8 @@ func (h *StudentHandler) Create(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "lrn, firstName, lastName, birthDate, and sex are required")
 		return
 	}
-	if len(req.LRN) != 12 {
-		writeError(w, http.StatusBadRequest, "LRN must be exactly 12 digits")
+	if !models.ValidateLRN(req.LRN) {
+		writeError(w, http.StatusBadRequest, "LRN must be exactly 12 numeric digits")
 		return
 	}
 	if req.GradeLevel < 7 || req.GradeLevel > 12 {

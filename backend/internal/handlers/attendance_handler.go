@@ -17,18 +17,23 @@ import (
 
 	"github.com/deped-sms/backend/internal/middleware"
 	"github.com/deped-sms/backend/internal/models"
+	"github.com/deped-sms/backend/internal/services/sms"
 )
 
 // AttendanceHandler handles all attendance-related HTTP requests.
 type AttendanceHandler struct {
-	Attendance *mongo.Collection
-	Students   *mongo.Collection
+	Attendance    *mongo.Collection
+	Students      *mongo.Collection
+	AbsenceAlerts *mongo.Collection
+	SMS           sms.Provider
 }
 
-func NewAttendanceHandler(db *mongo.Database) *AttendanceHandler {
+func NewAttendanceHandler(db *mongo.Database, smsProvider sms.Provider) *AttendanceHandler {
 	return &AttendanceHandler{
-		Attendance: db.Collection("attendance"),
-		Students:   db.Collection("students"),
+		Attendance:    db.Collection("attendance"),
+		Students:      db.Collection("students"),
+		AbsenceAlerts: db.Collection("absence_alerts"),
+		SMS:           smsProvider,
 	}
 }
 
@@ -37,6 +42,8 @@ func (h *AttendanceHandler) Routes() chi.Router {
 	r := chi.NewRouter()
 	r.Get("/",                                 h.List)
 	r.Post("/batch",                           h.BatchRecord)
+	r.Post("/send-sms",                        h.SendManualSMS)
+	r.Get("/alerts",                           h.GetAbsenceAlerts)
 	r.Get("/daily-report",                     h.DailyReport)
 	r.Get("/absence-report",                   h.AbsenceReport)
 	r.Get("/student/{studentId}/summary",      h.StudentSummary)
@@ -262,10 +269,149 @@ func (h *AttendanceHandler) BatchRecord(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// Trigger automated guardian alerts for absent learners
+	var absentIDs []primitive.ObjectID
+	for _, entry := range req.Records {
+		if entry.Status == models.AttendanceAbsent {
+			if sid, err := primitive.ObjectIDFromHex(entry.StudentID); err == nil {
+				absentIDs = append(absentIDs, sid)
+			}
+		}
+	}
+
+	var alertsCount int
+	if len(absentIDs) > 0 {
+		stCursor, err := h.Students.Find(ctx, bson.M{"_id": bson.M{"$in": absentIDs}})
+		if err == nil && stCursor != nil {
+			var absentStudents []models.Student
+			_ = stCursor.All(ctx, &absentStudents)
+
+			var alertDocs []interface{}
+			dateStr := date.Format("Jan 02, 2006")
+
+			for _, st := range absentStudents {
+				gContact := st.Guardian.ContactNo
+				if gContact == "" {
+					gContact = "No contact registered"
+				}
+				gName := st.Guardian.Name
+				if gName == "" {
+					gName = "Parent / Guardian"
+				}
+
+				msg := "DepEd Notice: Learner " + st.LastName + ", " + st.FirstName + " (LRN: " + st.LRN + ") was marked absent on " + dateStr + ". Please contact the school adviser for any excuse slip or clarification."
+
+				alert := models.AbsenceAlert{
+					ID:              primitive.NewObjectID(),
+					StudentID:       st.ID,
+					StudentName:     st.LastName + ", " + st.FirstName,
+					LRN:             st.LRN,
+					GuardianName:    gName,
+					GuardianContact: gContact,
+					Date:            date,
+					Channel:         "sms",
+					Status:          "dispatched",
+					Message:         msg,
+					CreatedAt:       now,
+				}
+				alertDocs = append(alertDocs, alert)
+
+				// Dispatch SMS notification to parent/guardian
+				if h.SMS != nil && gContact != "" && gContact != "No contact registered" {
+					go func(recipient, message string) {
+						_, _ = h.SMS.Send(context.Background(), recipient, message)
+					}(gContact, msg)
+				}
+			}
+
+			if len(alertDocs) > 0 {
+				_, _ = h.AbsenceAlerts.InsertMany(ctx, alertDocs)
+				alertsCount = len(alertDocs)
+			}
+		}
+	}
+
 	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"upserted": result.UpsertedCount,
-		"modified": result.ModifiedCount,
-		"total":    len(ops),
+		"upserted":    result.UpsertedCount,
+		"modified":    result.ModifiedCount,
+		"total":       len(ops),
+		"alertsCount": alertsCount,
+	})
+}
+
+// SendSMSRequest represents manual SMS dispatch payload.
+type SendSMSRequest struct {
+	Recipient string `json:"recipient"`
+	Message   string `json:"message"`
+	StudentID string `json:"studentId,omitempty"`
+}
+
+// SendManualSMS handles on-demand SMS notifications to parents/guardians.
+func (h *AttendanceHandler) SendManualSMS(w http.ResponseWriter, r *http.Request) {
+	var req SendSMSRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	if req.Recipient == "" || req.Message == "" {
+		writeError(w, http.StatusBadRequest, "recipient and message are required")
+		return
+	}
+
+	if h.SMS == nil {
+		writeError(w, http.StatusServiceUnavailable, "SMS provider not configured")
+		return
+	}
+
+	resp, err := h.SMS.Send(r.Context(), req.Recipient, req.Message)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to send SMS: "+err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, resp)
+}
+
+// ── GetAbsenceAlerts ──────────────────────────────────────────────────────────
+func (h *AttendanceHandler) GetAbsenceAlerts(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	limit := 50
+	if l, err := strconv.Atoi(q.Get("limit")); err == nil && l > 0 {
+		limit = l
+	}
+
+	filter := bson.M{}
+	if sidStr := q.Get("studentId"); sidStr != "" {
+		if sid, err := primitive.ObjectIDFromHex(sidStr); err == nil {
+			filter["student_id"] = sid
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 8*time.Second)
+	defer cancel()
+
+	cursor, err := h.AbsenceAlerts.Find(ctx,
+		filter,
+		options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}}).SetLimit(int64(limit)),
+	)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to query absence alerts")
+		return
+	}
+	defer cursor.Close(ctx)
+
+	var alerts []models.AbsenceAlert
+	if err := cursor.All(ctx, &alerts); err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to decode alerts")
+		return
+	}
+	if alerts == nil {
+		alerts = []models.AbsenceAlert{}
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"data":  alerts,
+		"total": len(alerts),
 	})
 }
 

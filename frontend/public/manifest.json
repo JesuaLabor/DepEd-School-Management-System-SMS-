@@ -1,0 +1,17 @@
+{
+  "short_name": "DepEd SMS",
+  "name": "DepEd School Management System",
+  "description": "Offline-capable K-12 School Management System for Philippine Public Secondary Schools",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0f172a",
+  "theme_color": "#1e40af",
+  "display": "standalone",
+  "orientation": "any"
+}

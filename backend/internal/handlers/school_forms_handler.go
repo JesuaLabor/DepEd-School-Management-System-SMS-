@@ -41,6 +41,7 @@ func (h *SchoolFormsHandler) Routes() chi.Router {
 	r := chi.NewRouter()
 	r.Get("/sf2", h.GetSF2)
 	r.Get("/sf10", h.GetSF10)
+	r.Get("/sf10/{studentId}", h.GetSF10)
 	return r
 }
 
@@ -271,7 +272,11 @@ func (h *SchoolFormsHandler) GetSF2(w http.ResponseWriter, r *http.Request) {
 // ── GetSF10 ────────────────────────────────────────────────────────────────────
 // Query: studentId (required)
 func (h *SchoolFormsHandler) GetSF10(w http.ResponseWriter, r *http.Request) {
-	studentID, err := primitive.ObjectIDFromHex(r.URL.Query().Get("studentId"))
+	sidStr := r.URL.Query().Get("studentId")
+	if sidStr == "" {
+		sidStr = chi.URLParam(r, "studentId")
+	}
+	studentID, err := primitive.ObjectIDFromHex(sidStr)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "valid studentId is required")
 		return

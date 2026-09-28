@@ -147,7 +147,40 @@ export default function Login() {
             </button>
           </form>
 
-          <div style={{ marginTop: "1.25rem", padding: "0.75rem", borderRadius: "0.375rem", background: "var(--bg-subtle, #f8fafc)", border: "1px dashed var(--border-color, #cbd5e1)", fontSize: "0.8125rem", color: "var(--text-muted, #64748b)" }}>
+          <div style={{
+            marginTop: "1.25rem",
+            padding: "0.85rem",
+            borderRadius: "0.5rem",
+            background: "linear-gradient(135deg, rgba(30, 64, 175, 0.05), rgba(14, 165, 233, 0.05))",
+            border: "1px solid rgba(30, 64, 175, 0.15)",
+            textAlign: "center"
+          }}>
+            <div style={{ fontSize: "0.825rem", fontWeight: 600, color: "var(--clr-primary, #1e40af)" }}>
+              🎓 Incoming Student or Transferee?
+            </div>
+            <p style={{ fontSize: "0.75rem", color: "var(--clr-text-muted, #64748b)", margin: "0.25rem 0 0.6rem" }}>
+              Submit an online enrollment application for JHS or SHS without an account.
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate("/apply")}
+              style={{
+                width: "100%",
+                padding: "0.5rem 0.75rem",
+                borderRadius: "0.375rem",
+                background: "var(--clr-primary, #1e40af)",
+                color: "#ffffff",
+                fontSize: "0.8rem",
+                fontWeight: 600,
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              Open Online Admission Portal →
+            </button>
+          </div>
+
+          <div style={{ marginTop: "1rem", padding: "0.75rem", borderRadius: "0.375rem", background: "var(--bg-subtle, #f8fafc)", border: "1px dashed var(--border-color, #cbd5e1)", fontSize: "0.8125rem", color: "var(--text-muted, #64748b)" }}>
             <span style={{ fontWeight: 600, color: "var(--text-main, #1e293b)" }}>Default Admin Credentials:</span><br />
             Email: <code>admin@deped.gov.ph</code><br />
             Password: <code>AdminPass123!</code>

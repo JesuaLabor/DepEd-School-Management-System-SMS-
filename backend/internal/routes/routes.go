@@ -11,6 +11,7 @@ import (
 	"github.com/deped-sms/backend/internal/config"
 	"github.com/deped-sms/backend/internal/handlers"
 	authmw "github.com/deped-sms/backend/internal/middleware"
+	"github.com/deped-sms/backend/internal/services/sms"
 )
 
 // New builds the full HTTP router for the application.
@@ -31,14 +32,21 @@ func New(db *mongo.Database, cfg *config.Config) http.Handler {
 		w.Write([]byte(`{"status":"ok"}`))
 	})
 
+	smsProvider        := sms.InitProvider(cfg.SMSProvider, cfg.SemaphoreAPIKey, cfg.SMSSenderName)
 	authHandler        := handlers.NewAuthHandler(db, cfg)
 	studentHandler     := handlers.NewStudentHandler(db)
 	userHandler        := handlers.NewUserHandler(db)
 	enrollmentHandler  := handlers.NewEnrollmentHandler(db)
-	attendanceHandler  := handlers.NewAttendanceHandler(db)
+	attendanceHandler  := handlers.NewAttendanceHandler(db, smsProvider)
 	sectionHandler     := handlers.NewSectionHandler(db)
 	gradeHandler       := handlers.NewGradeHandler(db)
 	schoolFormsHandler := handlers.NewSchoolFormsHandler(db)
+	analyticsHandler   := handlers.NewAnalyticsHandler(db)
+	announcementHandler := handlers.NewAnnouncementHandler(db)
+	scheduleHandler    := handlers.NewScheduleHandler(db)
+	portalHandler      := handlers.NewPortalHandler(db)
+	admissionHandler   := handlers.NewAdmissionHandler(db)
+	messageHandler     := handlers.NewMessageHandler(db)
 
 	r.Route("/api/v1", func(api chi.Router) {
 		// ── Public ────────────────────────────────────────────────────────────────
@@ -46,6 +54,7 @@ func New(db *mongo.Database, cfg *config.Config) http.Handler {
 		api.Post("/auth/register",    authHandler.Register)
 		api.Post("/auth/deped-sso",   authHandler.DepEdSSO)
 		api.Get("/auth/sso/config",   authHandler.GetSSOConfig)
+		api.Post("/admissions/apply", admissionHandler.Apply)
 
 		// ── Protected ─────────────────────────────────────────────────────────────
 		api.Group(func(protected chi.Router) {
@@ -86,6 +95,24 @@ func New(db *mongo.Database, cfg *config.Config) http.Handler {
 
 			// DepEd School Forms Hub (SF2, SF10)
 			protected.Mount("/school-forms", schoolFormsHandler.Routes())
+
+			// Analytics & Intelligence Dashboard
+			protected.Mount("/analytics", analyticsHandler.Routes())
+
+			// Communication & Announcements
+			protected.Mount("/announcements", announcementHandler.Routes())
+
+			// Class Scheduling & Teacher Subject Loads
+			protected.Mount("/schedules", scheduleHandler.Routes())
+
+			// Dedicated Student & Parent/Guardian Portal
+			protected.Mount("/portal", portalHandler.Routes())
+
+			// Admissions & Online Intake Review
+			protected.Mount("/admissions", admissionHandler.AdminRoutes())
+
+			// Direct Teacher-to-Guardian & Student Messaging
+			protected.Mount("/messages", messageHandler.Routes())
 		})
 	})
 

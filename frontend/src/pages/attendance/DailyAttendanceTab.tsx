@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { api } from "@/services/api";
+import { enqueueMutation } from "@/services/offlineQueue";
 import type { AttendanceStatus, AttendanceType, StudentSummary } from "@/types";
 
 const GRADE_LEVELS = [7, 8, 9, 10, 11, 12];
@@ -173,22 +174,52 @@ export default function DailyAttendanceTab() {
     }
 
     setSaving(true);
-    try {
-      const res = await api.attendance.batchRecord({
-        date,
-        gradeLevel,
-        schoolYear,
-        type,
-        subjectName: type === "subject" ? subjectName.trim() : undefined,
-        records: recordsToSave,
+    const payload = {
+      date,
+      gradeLevel,
+      schoolYear,
+      type,
+      subjectName: type === "subject" ? subjectName.trim() : undefined,
+      records: recordsToSave,
+    };
+
+    if (!navigator.onLine) {
+      enqueueMutation({
+        endpoint: "/attendance/batch",
+        method: "POST",
+        body: payload,
+        title: `Attendance Gr.${gradeLevel} (${date})`,
       });
+      setSuccessMsg(`Offline Mode: Saved ${recordsToSave.length} attendance records locally. Will auto-sync when reconnected.`);
+      setRows((prev) => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach((id) => {
+          updated[id] = {
+            ...updated[id],
+            originalStatus: updated[id].status,
+            originalRemarks: updated[id].remarks,
+          };
+        });
+        return updated;
+      });
+      setSaving(false);
+      return;
+    }
+
+    try {
+      const res = await api.attendance.batchRecord(payload);
 
       setSuccessMsg(`Attendance saved successfully! (${res.upserted + res.modified} students recorded)`);
       // Refresh to sync originals
       fetchReport();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to save attendance.";
-      setError(message);
+      enqueueMutation({
+        endpoint: "/attendance/batch",
+        method: "POST",
+        body: payload,
+        title: `Attendance Gr.${gradeLevel} (${date})`,
+      });
+      setSuccessMsg(`Network issue encountered. Saved ${recordsToSave.length} attendance records to offline queue. Will auto-sync.`);
     } finally {
       setSaving(false);
     }

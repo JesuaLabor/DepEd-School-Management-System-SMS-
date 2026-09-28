@@ -7,8 +7,14 @@ import type {
   SectionWithAdviser, SectionRoster, SectionFilters,
   CreateSectionInput, AdviserSummary, Section,
   Subject, GradeRecord, SectionGradeSheetResponse,
-  BatchQuarterRequest, LearnerSF9,
+  BatchQuarterRequest, LearnerSF9, GradingWeights, CalculateQuarterInput, CalculateQuarterResponse,
   SchoolFormSF2, SchoolFormSF10,
+  AnalyticsOverview,
+  Announcement, AnnouncementFilters, AnnouncementListResponse, CreateAnnouncementInput,
+  CreateScheduleSlotInput, ScheduleSlot, SectionScheduleResponse, TeacherLoadSummary,
+  PortalMyResponse, StudentOverviewResponse,
+  AdmissionApplication, AdmissionFilters, AdmissionListResponse, ApplyAdmissionInput, ApplicationStatus,
+  AbsenceAlert, Conversation, Message, ConversationDetailResponse, StartConversationInput, SendReplyInput, RecipientOption,
 } from "@/types";
 
 const BASE_URL = "/api/v1";
@@ -161,6 +167,16 @@ export const api = {
       request<AttendanceRecord>(`/attendance/${id}`, { method: "PUT", body: JSON.stringify(data) }),
     remove: (id: string) =>
       request<{ status: string }>(`/attendance/${id}`, { method: "DELETE" }),
+    alerts: (params: { date?: string; studentId?: string; limit?: number } = {}) => {
+      const p = new URLSearchParams();
+      Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== "") p.set(k, String(v)); });
+      return request<{ data: AbsenceAlert[]; total: number }>(`/attendance/alerts?${p}`);
+    },
+    sendSMS: (data: { recipient: string; message: string; studentId?: string }) =>
+      request<{ messageId: string; recipient: string; status: string; provider: string }>("/attendance/send-sms", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
   },
   sections: {
     list: (filters: SectionFilters = {}) => {
@@ -193,10 +209,11 @@ export const api = {
       request<{ data: AdviserSummary[]; total: number }>("/sections/teachers"),
   },
   grades: {
-    subjects: (gradeLevel: number, strand?: string) => {
+    subjects: (gradeLevel: number, strand?: string, semester?: number) => {
       const p = new URLSearchParams({ gradeLevel: String(gradeLevel) });
       if (strand) p.set("strand", strand);
-      return request<{ gradeLevel: number; strand?: string; data: Subject[] }>(`/grades/subjects?${p}`);
+      if (semester) p.set("semester", String(semester));
+      return request<{ gradeLevel: number; strand?: string; semester?: string; data: Subject[] }>(`/grades/subjects?${p}`);
     },
     sectionSheet: (sectionId: string, subjectCode: string, schoolYear?: string) => {
       const p = new URLSearchParams({ subjectCode });
@@ -211,6 +228,15 @@ export const api = {
       const p = schoolYear ? `?schoolYear=${schoolYear}` : "";
       return request<LearnerSF9>(`/grades/student/${studentId}/sf9${p}`);
     },
+    weights: (gradeLevel: number, subjectCode: string, strand?: string) => {
+      const p = new URLSearchParams({ gradeLevel: String(gradeLevel), subjectCode });
+      if (strand) p.set("strand", strand);
+      return request<GradingWeights>(`/grades/weights?${p}`);
+    },
+    calculate: (data: CalculateQuarterInput) =>
+      request<CalculateQuarterResponse>("/grades/calculate", {
+        method: "POST", body: JSON.stringify(data),
+      }),
     update: (id: string, data: { q1?: number; q2?: number; q3?: number; q4?: number }) =>
       request<GradeRecord>(`/grades/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   },
@@ -226,6 +252,97 @@ export const api = {
     sf10: (studentId: string) => {
       const p = new URLSearchParams({ studentId });
       return request<SchoolFormSF10>(`/school-forms/sf10?${p}`);
+    },
+  },
+  analytics: {
+    overview: () => request<AnalyticsOverview>("/analytics/overview"),
+  },
+  announcements: {
+    list: (params?: AnnouncementFilters) => {
+      const p = new URLSearchParams();
+      if (params?.scope) p.set("scope", params.scope);
+      if (params?.priority) p.set("priority", params.priority);
+      if (params?.gradeLevel) p.set("gradeLevel", String(params.gradeLevel));
+      if (params?.sectionId) p.set("sectionId", params.sectionId);
+      if (params?.search) p.set("search", params.search);
+      if (params?.limit) p.set("limit", String(params.limit));
+      if (params?.skip) p.set("skip", String(params.skip));
+      return request<AnnouncementListResponse>(`/announcements?${p}`);
+    },
+    create: (data: CreateAnnouncementInput) =>
+      request<Announcement>("/announcements", { method: "POST", body: JSON.stringify(data) }),
+    get: (id: string) =>
+      request<Announcement>(`/announcements/${id}`),
+    update: (id: string, data: Partial<CreateAnnouncementInput>) =>
+      request<Announcement>(`/announcements/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    delete: (id: string) =>
+      request<{ status: string }>(`/announcements/${id}`, { method: "DELETE" }),
+  },
+  schedules: {
+    getSection: (sectionId: string) =>
+      request<SectionScheduleResponse>(`/schedules/section/${sectionId}`),
+    create: (data: CreateScheduleSlotInput) =>
+      request<ScheduleSlot>("/schedules", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: Partial<CreateScheduleSlotInput>) =>
+      request<ScheduleSlot>(`/schedules/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    delete: (id: string) =>
+      request<{ status: string }>(`/schedules/${id}`, { method: "DELETE" }),
+    getTeacher: (teacherId: string) =>
+      request<TeacherLoadSummary>(`/schedules/teacher/${teacherId}`),
+    teachersLoad: () =>
+      request<{ data: TeacherLoadSummary[]; total: number }>("/schedules/teachers-load"),
+  },
+  portal: {
+    me: () => request<PortalMyResponse>("/portal/me"),
+    studentOverview: (studentId: string) =>
+      request<StudentOverviewResponse>(`/portal/student/${studentId}/overview`),
+    studentGrades: (studentId: string) =>
+      request<{ studentId: string; grades: GradeRecord[] }>(`/portal/student/${studentId}/grades`),
+    studentAttendance: (studentId: string) =>
+      request<{ studentId: string; records: AttendanceRecord[]; total: number }>(`/portal/student/${studentId}/attendance`),
+    studentSchedule: (studentId: string) =>
+      request<{ studentId: string; sectionId: string; slots: ScheduleSlot[]; total: number }>(`/portal/student/${studentId}/schedule`),
+  },
+  admissions: {
+    apply: (data: ApplyAdmissionInput) =>
+      request<{ status: string; applicationNo: string; applicationId: string; message: string; application: AdmissionApplication }>("/admissions/apply", {
+        method: "POST", body: JSON.stringify(data),
+      }),
+    list: (params?: AdmissionFilters) => {
+      const p = new URLSearchParams();
+      if (params?.status) p.set("status", params.status);
+      if (params?.gradeLevel) p.set("gradeLevel", String(params.gradeLevel));
+      if (params?.schoolYear) p.set("schoolYear", params.schoolYear);
+      if (params?.search) p.set("search", params.search);
+      if (params?.limit) p.set("limit", String(params.limit));
+      if (params?.skip) p.set("skip", String(params.skip));
+      return request<AdmissionListResponse>(`/admissions?${p}`);
+    },
+    get: (id: string) =>
+      request<AdmissionApplication>(`/admissions/${id}`),
+    updateStatus: (id: string, data: { status: ApplicationStatus; remarks?: string }) =>
+      request<{ status: string }>(`/admissions/${id}/status`, { method: "PATCH", body: JSON.stringify(data) }),
+    approve: (id: string, data: { assignedLrn?: string; sectionId?: string; remarks?: string }) =>
+      request<{ status: string; studentId: string; lrn: string; enrollmentId: string; message: string }>(`/admissions/${id}/approve`, {
+        method: "POST", body: JSON.stringify(data),
+      }),
+  },
+  messages: {
+    conversations: () =>
+      request<{ data: Conversation[] }>("/messages/conversations").then((r) => r.data || (r as unknown as Conversation[])),
+    getConversation: (id: string) =>
+      request<ConversationDetailResponse>(`/messages/conversations/${id}`),
+    start: (data: StartConversationInput) =>
+      request<ConversationDetailResponse>("/messages/conversations", {
+        method: "POST", body: JSON.stringify(data),
+      }),
+    reply: (conversationId: string, data: SendReplyInput) =>
+      request<Message>(`/messages/conversations/${conversationId}/reply`, {
+        method: "POST", body: JSON.stringify(data),
+      }),
+    recipients: (search?: string) => {
+      const p = search ? `?search=${encodeURIComponent(search)}` : "";
+      return request<{ data: RecipientOption[] }>(`/messages/recipients${p}`).then((r) => r.data || (r as unknown as RecipientOption[]));
     },
   },
 };

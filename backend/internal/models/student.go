@@ -99,3 +99,16 @@ type Student struct {
 	CreatedAt time.Time          `bson:"created_at"          json:"createdAt"`
 	UpdatedAt time.Time          `bson:"updated_at"          json:"updatedAt"`
 }
+
+// ValidateLRN validates a DepEd 12-digit Learner Reference Number.
+func ValidateLRN(lrn string) bool {
+	if len(lrn) != 12 {
+		return false
+	}
+	for _, r := range lrn {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
+}

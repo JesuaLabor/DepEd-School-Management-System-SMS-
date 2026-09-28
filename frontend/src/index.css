@@ -797,26 +797,102 @@ tbody tr:hover { background: var(--clr-surface-2); }
 }
 
 @media print {
-  body {
-    background: #fff !important;
-    color: #000 !important;
+  @page {
+    size: letter portrait;
+    margin: 10mm 12mm;
   }
-  .sidebar, .page-header, .btn, .modal-header button, .no-print {
+  
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+    font-size: 10.5pt !important;
+    line-height: 1.4 !important;
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif !important;
+  }
+
+  .sidebar, 
+  .page-header, 
+  .btn, 
+  .modal-header button, 
+  .no-print,
+  .offline-banner,
+  .student-picker,
+  input,
+  select {
     display: none !important;
   }
+
   .main-content {
     margin: 0 !important;
     padding: 0 !important;
+    width: 100% !important;
   }
-  .card, .data-table {
-    border: 1px solid #ccc !important;
+
+  .card, .sf9-container {
+    border: none !important;
     box-shadow: none !important;
-    background: #fff !important;
-    color: #000 !important;
+    background: transparent !important;
+    color: #111827 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
   }
-  .data-table th, .data-table td {
-    color: #000 !important;
-    border-color: #ddd !important;
+
+  .data-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    border: 1.5px solid #111827 !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    margin-bottom: 12pt !important;
+  }
+
+  .data-table th {
+    background-color: #f3f4f6 !important;
+    color: #111827 !important;
+    border: 1px solid #374151 !important;
+    font-weight: 700 !important;
+    padding: 4pt 6pt !important;
+  }
+
+  .data-table td {
+    color: #111827 !important;
+    border: 1px solid #d1d5db !important;
+    padding: 4pt 6pt !important;
+  }
+
+  .badge {
+    border: 1px solid #374151 !important;
+    background: transparent !important;
+    color: #111827 !important;
+    font-weight: 700 !important;
+  }
+
+  .badge-success {
+    border-color: #166534 !important;
+    color: #166534 !important;
+  }
+
+  .badge-error, .badge-danger {
+    border-color: #991b1b !important;
+    color: #991b1b !important;
+  }
+
+  tr, .card, .sf9-container > div {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .page-break {
+    page-break-before: always !important;
+    break-before: page !important;
   }
 }
 
@@ -889,13 +965,4 @@ tbody tr:hover { background: var(--clr-surface-2); }
   padding: 2.5rem;
   max-width: 900px;
   margin: 0 auto;
-}
-
-@media print {
-  .sf9-container {
-    border: none !important;
-    padding: 0 !important;
-    max-width: 100% !important;
-    background: transparent !important;
-  }
 }

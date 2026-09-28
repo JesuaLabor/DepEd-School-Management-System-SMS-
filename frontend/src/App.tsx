@@ -14,6 +14,20 @@ import SectionDetailPage  from "@/pages/sections/SectionDetailPage";
 import GradingSheetPage   from "@/pages/grading/GradingSheetPage";
 import StudentSF9Page     from "@/pages/grading/StudentSF9Page";
 import SchoolFormsHubPage from "@/pages/school-forms/SchoolFormsHubPage";
+import AnnouncementsPage  from "@/pages/announcements/AnnouncementsPage";
+import TeacherLoadPage    from "@/pages/sections/TeacherLoadPage";
+import LearnerPortalPage  from "@/pages/portal/LearnerPortalPage";
+import OnlineApplicationPage from "@/pages/enrollment/OnlineApplicationPage";
+import MessagesPage        from "@/pages/messages/MessagesPage";
+import { useAuth }        from "@/context/AuthContext";
+
+function HomeRoute() {
+  const { user } = useAuth();
+  if (user?.role === "student" || user?.role === "guardian") {
+    return <LearnerPortalPage />;
+  }
+  return <Dashboard />;
+}
 
 export default function App() {
   return (
@@ -22,18 +36,23 @@ export default function App() {
         <Routes>
           {/* Public */}
           <Route path="/login" element={<Login />} />
+          <Route path="/apply" element={<OnlineApplicationPage />} />
 
           {/* Protected — any authenticated user */}
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="/students"     element={<StudentList />} />
-              <Route path="/sections"     element={<SectionListPage />} />
-              <Route path="/sections/:id" element={<SectionDetailPage />} />
+              <Route index element={<HomeRoute />} />
+              <Route path="/portal"               element={<LearnerPortalPage />} />
+              <Route path="/announcements"        element={<AnnouncementsPage />} />
+              <Route path="/students"            element={<StudentList />} />
+              <Route path="/sections"            element={<SectionListPage />} />
+              <Route path="/sections/:id"        element={<SectionDetailPage />} />
+              <Route path="/schedules/teachers"  element={<TeacherLoadPage />} />
               <Route path="/attendance"   element={<AttendancePage />} />
               <Route path="/grading"      element={<GradingSheetPage />} />
               <Route path="/sf9"          element={<StudentSF9Page />} />
               <Route path="/school-forms" element={<SchoolFormsHubPage />} />
+              <Route path="/messages"     element={<MessagesPage />} />
               <Route path="/profile"      element={<Profile />} />
 
               {/* Admin / Registrar only */}

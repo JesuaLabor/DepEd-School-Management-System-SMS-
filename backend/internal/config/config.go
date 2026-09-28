@@ -17,6 +17,9 @@ type Config struct {
 	JWTExpiryHours     int
 	GoogleClientID     string
 	GoogleClientSecret string
+	SMSProvider        string
+	SemaphoreAPIKey    string
+	SMSSenderName      string
 }
 
 // Load reads a .env file (if present) and environment variables into Config.
@@ -37,6 +40,9 @@ func Load() *Config {
 		JWTExpiryHours:     expiry,
 		GoogleClientID:     getEnv("GOOGLE_CLIENT_ID", ""),
 		GoogleClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),
+		SMSProvider:        getEnv("SMS_PROVIDER", "mock"),
+		SemaphoreAPIKey:    getEnv("SEMAPHORE_API_KEY", ""),
+		SMSSenderName:      getEnv("SMS_SENDER_NAME", "DepEdSMS"),
 	}
 }
 

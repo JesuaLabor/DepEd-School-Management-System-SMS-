@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { api } from "@/services/api";
+import { enqueueMutation } from "@/services/offlineQueue";
 import type {
   SectionWithAdviser,
   Subject,
@@ -8,6 +9,7 @@ import type {
   GradeRecord,
   GradeSheetStats,
 } from "@/types";
+import DO8GradingCalculatorModal from "./DO8GradingCalculatorModal";
 
 type Quarter = "q1" | "q2" | "q3" | "q4";
 
@@ -20,7 +22,12 @@ export default function GradingSheetPage() {
   const [subjects, setSubjects]         = useState<Subject[]>([]);
   const [selectedSubjectCode, setSelectedSubjectCode] = useState<string>("");
   const [quarter, setQuarter]           = useState<Quarter>("q1");
+  const [shsSemester, setShsSemester]   = useState<number>(0); // 0 = all, 1 = sem 1, 2 = sem 2
   const [schoolYear, setSchoolYear]     = useState<string>("2024-2025");
+
+  // DO 8 Calculator Modal State
+  const [showCalculator, setShowCalculator]       = useState(false);
+  const [calculatorStudent, setCalculatorStudent] = useState<StudentSummary | null>(null);
 
   // Sheet Data
   const [students, setStudents]         = useState<StudentSummary[]>([]);
@@ -59,19 +66,25 @@ export default function GradingSheetPage() {
     return sections.find((s) => s.id === selectedSectionId) || null;
   }, [sections, selectedSectionId]);
 
-  // 2. Load subjects when active section changes
+  // 2. Load subjects when active section or semester changes
   useEffect(() => {
     if (!activeSection) return;
+    const semToUse = activeSection.gradeLevel >= 11 ? (shsSemester || undefined) : undefined;
     api.grades
-      .subjects(activeSection.gradeLevel, activeSection.strand)
+      .subjects(activeSection.gradeLevel, activeSection.strand, semToUse)
       .then((res) => {
-        setSubjects(res.data || []);
-        if (res.data && res.data.length > 0) {
-          setSelectedSubjectCode(res.data[0].code);
+        const loadedSubs = res.data || [];
+        setSubjects(loadedSubs);
+        if (loadedSubs.length > 0) {
+          if (!loadedSubs.some((s) => s.code === selectedSubjectCode)) {
+            setSelectedSubjectCode(loadedSubs[0].code);
+          }
+        } else {
+          setSelectedSubjectCode("");
         }
       })
       .catch(() => {});
-  }, [activeSection]);
+  }, [activeSection, shsSemester]);
 
   // Selected subject object
   const activeSubject = useMemo(() => {
@@ -194,22 +207,62 @@ export default function GradingSheetPage() {
     }
 
     setSaving(true);
-    try {
-      await api.grades.batchQuarter({
-        sectionId:   activeSection.id,
-        subjectCode: activeSubject.code,
-        subjectName: activeSubject.name,
-        schoolYear,
-        gradeLevel:  activeSection.gradeLevel,
-        quarter,
-        entries,
+    const payload = {
+      sectionId:   activeSection.id,
+      subjectCode: activeSubject.code,
+      subjectName: activeSubject.name,
+      schoolYear,
+      gradeLevel:  activeSection.gradeLevel,
+      quarter,
+      entries,
+    };
+
+    if (!navigator.onLine) {
+      enqueueMutation({
+        endpoint: "/grades/batch",
+        method: "POST",
+        body: payload,
+        title: `Grades ${activeSubject.code} Q${quarter.slice(1).toUpperCase()} (${activeSection.name})`,
       });
+      setSuccessMsg(`Offline Mode: Saved ${entries.length} student grade entries locally. Will auto-sync when online.`);
+      // Update local gradesMap to prevent losing changes
+      setGradesMap((prev) => {
+        const updated = { ...prev };
+        entries.forEach((e) => {
+          if (!updated[e.studentId]) {
+            updated[e.studentId] = {
+              id: `local_${e.studentId}`,
+              studentId: e.studentId,
+              sectionId: activeSection.id,
+              subjectCode: activeSubject.code,
+              subjectName: activeSubject.name,
+              schoolYear,
+              gradeLevel: activeSection.gradeLevel,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            };
+          }
+          ((updated[e.studentId] as unknown) as Record<string, unknown>)[quarter] = e.grade;
+        });
+        return updated;
+      });
+      setSaving(false);
+      return;
+    }
+
+    try {
+      await api.grades.batchQuarter(payload);
 
       setSuccessMsg(`Quarter ${quarter.toUpperCase()} grades successfully recorded!`);
       fetchSheet();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to save grades.";
-      setError(message);
+      enqueueMutation({
+        endpoint: "/grades/batch",
+        method: "POST",
+        body: payload,
+        title: `Grades ${activeSubject.code} Q${quarter.slice(1).toUpperCase()} (${activeSection.name})`,
+      });
+      setSuccessMsg(`Network error. Queued ${entries.length} grade entries for offline sync.`);
     } finally {
       setSaving(false);
     }
@@ -248,13 +301,26 @@ export default function GradingSheetPage() {
           </p>
         </div>
 
-        <Link
-          to="/sf9"
-          className="btn btn-secondary"
-          style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
-        >
-          📄 View Learner SF9 Card →
-        </Link>
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => {
+              setCalculatorStudent(null);
+              setShowCalculator(true);
+            }}
+            style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}
+          >
+            🧮 DO 8 Calculator
+          </button>
+          <Link
+            to="/sf9"
+            className="btn btn-secondary"
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+          >
+            📄 View Learner SF9 Card →
+          </Link>
+        </div>
       </div>
 
       {/* ── Control Bar ── */}
@@ -289,11 +355,48 @@ export default function GradingSheetPage() {
             >
               {subjects.map((sub) => (
                 <option key={sub.code} value={sub.code}>
-                  {sub.name} ({sub.code})
+                  {sub.name} ({sub.code}){sub.semester ? ` · Sem ${sub.semester}` : ""}
                 </option>
               ))}
             </select>
           </div>
+
+          {/* SHS Semester Toggle (Grades 11-12) */}
+          {activeSection && activeSection.gradeLevel >= 11 && (
+            <div>
+              <label className="form-label" style={{ fontSize: "0.8rem", marginBottom: "0.35rem" }}>
+                SHS Semester
+              </label>
+              <div style={{ display: "flex", gap: "2px", background: "var(--clr-bg)", padding: "2px", borderRadius: "var(--radius-sm)", border: "1px solid var(--clr-border-soft)" }}>
+                {[
+                  { val: 0, label: "All" },
+                  { val: 1, label: "Sem 1" },
+                  { val: 2, label: "Sem 2" },
+                ].map((s) => (
+                  <button
+                    key={s.val}
+                    type="button"
+                    onClick={() => setShsSemester(s.val)}
+                    style={{
+                      flex: 1,
+                      padding: "0.35rem 0.4rem",
+                      border: "none",
+                      borderRadius: "4px",
+                      fontWeight: 600,
+                      fontSize: "0.75rem",
+                      cursor: "pointer",
+                      background: shsSemester === s.val ? "var(--clr-accent)" : "transparent",
+                      color: shsSemester === s.val ? "#fff" : "var(--clr-text-muted)",
+                      transition: "all var(--transition)",
+                      whiteSpace: "nowrap"
+                    }}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* School Year */}
           <div>
@@ -527,6 +630,24 @@ export default function GradingSheetPage() {
           )}
         </button>
       </div>
+
+      {/* DO 8 Grading Calculator Modal */}
+      {showCalculator && activeSection && activeSubject && (
+        <DO8GradingCalculatorModal
+          gradeLevel={activeSection.gradeLevel}
+          subjectCode={activeSubject.code}
+          subjectName={activeSubject.name}
+          strand={activeSection.strand}
+          studentName={calculatorStudent ? `${calculatorStudent.lastName}, ${calculatorStudent.firstName}` : undefined}
+          studentLrn={calculatorStudent?.lrn}
+          quarterLabel={quarter}
+          onApply={calculatorStudent ? (grade) => handleGradeChange(calculatorStudent.id, String(grade)) : undefined}
+          onClose={() => {
+            setShowCalculator(false);
+            setCalculatorStudent(null);
+          }}
+        />
+      )}
     </div>
   );
 
@@ -679,16 +800,30 @@ export default function GradingSheetPage() {
           )}
         </td>
 
-        {/* SF9 Link */}
+        {/* SF9 & Calculator Actions */}
         <td style={{ textAlign: "right" }}>
-          <Link
-            to={`/sf9?studentId=${st.id}`}
-            className="btn-icon"
-            title="View Student SF9 Card"
-            style={{ fontSize: "0.8rem", color: "var(--clr-accent)" }}
-          >
-            📄
-          </Link>
+          <div style={{ display: "inline-flex", gap: "0.35rem", alignItems: "center" }}>
+            <button
+              type="button"
+              className="btn-icon"
+              title="Compute via DO 8 Raw Scores"
+              style={{ fontSize: "0.85rem", background: "none", border: "none", cursor: "pointer", padding: "2px 4px" }}
+              onClick={() => {
+                setCalculatorStudent(st);
+                setShowCalculator(true);
+              }}
+            >
+              🧮
+            </button>
+            <Link
+              to={`/sf9?studentId=${st.id}`}
+              className="btn-icon"
+              title="View Student SF9 Card"
+              style={{ fontSize: "0.85rem", color: "var(--clr-accent)" }}
+            >
+              📄
+            </Link>
+          </div>
         </td>
       </tr>
     );

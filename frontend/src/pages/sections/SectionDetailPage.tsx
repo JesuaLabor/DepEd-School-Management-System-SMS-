@@ -4,6 +4,7 @@ import { api } from "@/services/api";
 import type { SectionRoster } from "@/types";
 import AssignStudentsModal from "./AssignStudentsModal";
 import CreateSectionModal  from "./CreateSectionModal";
+import SectionScheduleTab from "./SectionScheduleTab";
 
 export default function SectionDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -16,6 +17,7 @@ export default function SectionDetailPage() {
   const [showAssignModal, setShowAssignModal] = useState<boolean>(false);
   const [showEditModal, setShowEditModal]     = useState<boolean>(false);
   const [actionError, setActionError]         = useState<string | null>(null);
+  const [activeTab, setActiveTab]             = useState<"roster" | "schedule">("roster");
 
   const fetchRoster = async () => {
     if (!id) return;
@@ -246,8 +248,27 @@ export default function SectionDetailPage() {
         </div>
       </div>
 
-      {/* ── Official Class Roster Tables (DepEd SF1 Format) ── */}
-      <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+      {/* ── Section Views Tab Switcher ── */}
+      <div className="no-print" style={{ display: "flex", gap: "0.5rem", borderBottom: "1px solid var(--clr-border)", paddingBottom: "0.5rem" }}>
+        <button
+          className={`btn btn-sm ${activeTab === "roster" ? "btn-primary" : "btn-outline"}`}
+          onClick={() => setActiveTab("roster")}
+        >
+          👥 Class Learners Roster (SF1)
+        </button>
+        <button
+          className={`btn btn-sm ${activeTab === "schedule" ? "btn-primary" : "btn-outline"}`}
+          onClick={() => setActiveTab("schedule")}
+        >
+          🗓️ Weekly Timetable & Schedule
+        </button>
+      </div>
+
+      {activeTab === "schedule" ? (
+        <SectionScheduleTab section={section} />
+      ) : (
+        /* ── Official Class Roster Tables (DepEd SF1 Format) ── */
+        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
         <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid var(--clr-border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 700 }}>Official Class Roster</h3>
@@ -410,6 +431,7 @@ export default function SectionDetailPage() {
           </div>
         )}
       </div>
+      )}
 
       {/* ── Assign Students Modal ── */}
       {showAssignModal && (

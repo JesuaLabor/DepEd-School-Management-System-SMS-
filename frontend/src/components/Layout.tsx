@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { ROLE_LABELS } from "@/types";
+import OfflineBanner from "./OfflineBanner";
 
 /* ── Icons (inline SVG helpers) ─────────────────────────────────────────── */
 const Icon = {
@@ -8,6 +9,12 @@ const Icon = {
     <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
       <rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+    </svg>
+  ),
+  Announcements: () => (
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+      <path d="M13.73 21a2 2 0 01-3.46 0"/>
     </svg>
   ),
   Students: () => (
@@ -50,6 +57,12 @@ const Icon = {
       <path d="M3 9h18M9 21V9"/>
     </svg>
   ),
+  Schedule: () => (
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10"/>
+      <polyline points="12 6 12 12 16 14"/>
+    </svg>
+  ),
   Grading: () => (
     <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
@@ -67,6 +80,16 @@ const Icon = {
   Logout: () => (
     <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+    </svg>
+  ),
+  Portal: () => (
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+    </svg>
+  ),
+  Messages: () => (
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
     </svg>
   ),
 };
@@ -96,35 +119,61 @@ export default function Layout() {
         </div>
 
         <nav className="sidebar-nav">
-          <div className="sidebar-section-label">Main</div>
-          <NavLink to="/"         end className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
-            <Icon.Dashboard /><span>Dashboard</span>
-          </NavLink>
-          <NavLink to="/students" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
-            <Icon.Students /><span>Students</span>
-          </NavLink>
-          <NavLink to="/sections" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
-            <Icon.Sections /><span>Classes & Sections</span>
-          </NavLink>
-          <NavLink to="/attendance" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
-            <Icon.Attendance /><span>Attendance</span>
-          </NavLink>
-          <NavLink to="/grading" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
-            <Icon.Grading /><span>Grading & SF9</span>
-          </NavLink>
-          <NavLink to="/school-forms" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
-            <Icon.SchoolForms /><span>School Forms (SF)</span>
-          </NavLink>
-
-          {isAdmin && (
+          {user?.role === "student" || user?.role === "guardian" ? (
             <>
-              <div className="sidebar-section-label" style={{ marginTop: "0.5rem" }}>Administration</div>
-              <NavLink to="/enrollments" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
-                <Icon.Enrollment /><span>Enrollments</span>
+              <div className="sidebar-section-label">Portal</div>
+              <NavLink to="/portal" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
+                <Icon.Portal /><span>{user.role === "guardian" ? "Parent Portal" : "Learner Portal"}</span>
               </NavLink>
-              <NavLink to="/users" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
-                <Icon.Users /><span>User Management</span>
+              <NavLink to="/messages" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
+                <Icon.Messages /><span>Messages</span>
               </NavLink>
+              <NavLink to="/announcements" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
+                <Icon.Announcements /><span>Bulletins & Notices</span>
+              </NavLink>
+            </>
+          ) : (
+            <>
+              <div className="sidebar-section-label">Main</div>
+              <NavLink to="/"         end className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
+                <Icon.Dashboard /><span>Dashboard</span>
+              </NavLink>
+              <NavLink to="/messages" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
+                <Icon.Messages /><span>Messages</span>
+              </NavLink>
+              <NavLink to="/announcements" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
+                <Icon.Announcements /><span>Bulletins & Notices</span>
+              </NavLink>
+              <NavLink to="/students" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
+                <Icon.Students /><span>Students</span>
+              </NavLink>
+              <NavLink to="/sections" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
+                <Icon.Sections /><span>Classes & Sections</span>
+              </NavLink>
+              <NavLink to="/schedules/teachers" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
+                <Icon.Schedule /><span>Faculty Schedules</span>
+              </NavLink>
+              <NavLink to="/attendance" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
+                <Icon.Attendance /><span>Attendance</span>
+              </NavLink>
+              <NavLink to="/grading" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
+                <Icon.Grading /><span>Grading & SF9</span>
+              </NavLink>
+              <NavLink to="/school-forms" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
+                <Icon.SchoolForms /><span>School Forms (SF)</span>
+              </NavLink>
+
+              {isAdmin && (
+                <>
+                  <div className="sidebar-section-label" style={{ marginTop: "0.5rem" }}>Administration</div>
+                  <NavLink to="/enrollments" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
+                    <Icon.Enrollment /><span>Enrollments</span>
+                  </NavLink>
+                  <NavLink to="/users" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
+                    <Icon.Users /><span>User Management</span>
+                  </NavLink>
+                </>
+              )}
             </>
           )}
 
@@ -149,8 +198,11 @@ export default function Layout() {
       </aside>
 
       {/* ── Main ────────────────────────────────────────────────────────── */}
-      <main className="main-content">
-        <Outlet />
+      <main className="main-content" style={{ display: "flex", flexDirection: "column" }}>
+        <OfflineBanner />
+        <div style={{ flex: 1, padding: "var(--space-6, 1.5rem)" }}>
+          <Outlet />
+        </div>
       </main>
     </div>
   );
