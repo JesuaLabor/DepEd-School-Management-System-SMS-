@@ -7,8 +7,8 @@ export default function Profile() {
   const { user } = useAuth();
 
   /* Change password form */
-  const [cpForm, setCpForm]     = useState({ current: "", next: "", confirm: "" });
-  const [cpError, setCpError]   = useState<string | null>(null);
+  const [cpForm, setCpForm] = useState({ current: "", next: "", confirm: "" });
+  const [cpError, setCpError] = useState<string | null>(null);
   const [cpSuccess, setCpSuccess] = useState(false);
   const [cpLoading, setCpLoading] = useState(false);
 
@@ -30,7 +30,7 @@ export default function Profile() {
       setCpSuccess(true);
       setCpForm({ current: "", next: "", confirm: "" });
     } catch (err) {
-      setCpError(err instanceof Error ? err.message : "Failed");
+      setCpError(err instanceof Error ? err.message : "Failed to update password");
     } finally {
       setCpLoading(false);
     }
@@ -41,28 +41,59 @@ export default function Profile() {
   const initials = `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
 
   return (
-    <>
-      <div className="page-header">
-        <h1>My Profile</h1>
-        <p>View and manage your account information.</p>
+    <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem", maxWidth: "980px" }}>
+      {/* ── Sub-Header ─────────────────────────────────────────────────── */}
+      <div style={{ borderBottom: "1px solid #e2e8f0", paddingBottom: "1rem" }}>
+        <h1 style={{ margin: 0, fontSize: "1.35rem", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.02em" }}>
+          Account & Security Settings
+        </h1>
+        <p style={{ margin: "3px 0 0", fontSize: "0.825rem", color: "#64748b" }}>
+          View your DepEd credentials, school assignment details, and manage password security.
+        </p>
       </div>
 
-      <div className="page-body" style={{ maxWidth: 640 }}>
-        {/* ── Profile card ───────────────────────────────────────────── */}
-        <div className="card mb-4">
-          <div className="flex items-center gap-4">
-            <div style={{
-              width: 64, height: 64, borderRadius: "50%",
-              background: "linear-gradient(135deg,var(--clr-primary),var(--clr-accent))",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: "1.4rem", fontWeight: 700, color: "#fff", flexShrink: 0,
-            }}>{initials}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: "1.5rem", alignItems: "start" }}>
+        {/* ── Left Column: Identity & Access Card ────────────────────────── */}
+        <div
+          style={{
+            background: "#ffffff",
+            borderRadius: "14px",
+            border: "1px solid #e9edf4",
+            padding: "1.75rem",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.02)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "1.25rem",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <div
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: "50%",
+                background: "#2563eb",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "1.5rem",
+                fontWeight: 800,
+                color: "#ffffff",
+                boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)",
+                flexShrink: 0,
+              }}
+            >
+              {initials}
+            </div>
             <div>
-              <div style={{ fontSize: "1.2rem", fontWeight: 700 }}>{user.firstName} {user.lastName}</div>
-              <div style={{ color: "var(--clr-text-muted)", fontSize: "0.875rem" }}>{user.email}</div>
-              <div style={{ marginTop: "0.4rem" }}>
+              <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "#0f172a", lineHeight: 1.2 }}>
+                {user.firstName} {user.lastName}
+              </div>
+              <div style={{ color: "#64748b", fontSize: "0.825rem", marginTop: "2px" }}>
+                {user.email}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginTop: "0.5rem" }}>
                 <span className="badge badge-primary">{ROLE_LABELS[user.role]}</span>
-                {" "}
                 <span className={user.isActive ? "badge badge-success" : "badge badge-danger"}>
                   {user.isActive ? "Active" : "Disabled"}
                 </span>
@@ -70,51 +101,117 @@ export default function Profile() {
             </div>
           </div>
 
-          <div className="divider" />
+          <div style={{ height: "1px", background: "#f1f5f9" }} />
 
-          <div className="grid-2" style={{ fontSize: "0.875rem" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem", fontSize: "0.825rem" }}>
             <div>
-              <div className="form-label">Account ID</div>
-              <div style={{ fontFamily: "monospace", color: "var(--clr-text-muted)", fontSize: "0.8rem", wordBreak: "break-all" }}>{user.id}</div>
+              <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                School Assignment
+              </div>
+              <div style={{ fontWeight: 600, color: "#0f172a", marginTop: "2px" }}>
+                Kalilangan National High School
+              </div>
+              <div style={{ fontSize: "0.72rem", color: "#94a3b8" }}>
+                Division of Bukidnon · Region X
+              </div>
             </div>
+
             <div>
-              <div className="form-label">Member since</div>
-              <div>{new Date(user.createdAt).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })}</div>
+              <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                Account Identifier
+              </div>
+              <div style={{ fontFamily: "monospace", color: "#334155", background: "#f8fafc", padding: "4px 8px", borderRadius: "6px", border: "1px solid #e2e8f0", marginTop: "3px", fontSize: "0.75rem", wordBreak: "break-all" }}>
+                {user.id}
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                Member Since
+              </div>
+              <div style={{ color: "#0f172a", marginTop: "2px", fontWeight: 500 }}>
+                {new Date(user.createdAt).toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* ── Change password ─────────────────────────────────────────── */}
-        <div className="card">
-          <div className="card-header">
-            <span className="card-title">Change Password</span>
+        {/* ── Right Column: Password Management Card ─────────────────────── */}
+        <div
+          style={{
+            background: "#ffffff",
+            borderRadius: "14px",
+            border: "1px solid #e9edf4",
+            padding: "1.75rem",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.02)",
+          }}
+        >
+          <div style={{ marginBottom: "1.25rem" }}>
+            <h2 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "#0f172a" }}>
+              Change Password
+            </h2>
+            <p style={{ margin: "2px 0 0", fontSize: "0.8rem", color: "#64748b" }}>
+              Ensure your account is protected with a secure and unique password.
+            </p>
           </div>
-          {cpError   && <div className="alert alert-error mb-4">{cpError}</div>}
-          {cpSuccess && <div className="alert alert-success mb-4">Password updated successfully!</div>}
-          <form onSubmit={handleChangePassword} style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+
+          {cpError && <div className="alert alert-error mb-4">⚠️ {cpError}</div>}
+          {cpSuccess && <div className="alert alert-success mb-4">✅ Password updated successfully!</div>}
+
+          <form onSubmit={handleChangePassword} style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
             <div className="form-group">
               <label className="form-label">Current Password</label>
-              <input className="form-input" type="password" required
-                value={cpForm.current} onChange={(e) => setCpForm(f => ({ ...f, current: e.target.value }))} />
+              <input
+                className="form-input"
+                type="password"
+                required
+                placeholder="Enter current password"
+                value={cpForm.current}
+                onChange={(e) => setCpForm(f => ({ ...f, current: e.target.value }))}
+              />
             </div>
+
             <div className="form-group">
-              <label className="form-label">New Password <span className="form-hint">(min 8 chars)</span></label>
-              <input className="form-input" type="password" required minLength={8}
-                value={cpForm.next} onChange={(e) => setCpForm(f => ({ ...f, next: e.target.value }))} />
+              <label className="form-label">
+                New Password <span className="form-hint">(minimum 8 characters)</span>
+              </label>
+              <input
+                className="form-input"
+                type="password"
+                required
+                minLength={8}
+                placeholder="Enter new password"
+                value={cpForm.next}
+                onChange={(e) => setCpForm(f => ({ ...f, next: e.target.value }))}
+              />
             </div>
+
             <div className="form-group">
               <label className="form-label">Confirm New Password</label>
-              <input className="form-input" type="password" required minLength={8}
-                value={cpForm.confirm} onChange={(e) => setCpForm(f => ({ ...f, confirm: e.target.value }))} />
+              <input
+                className="form-input"
+                type="password"
+                required
+                minLength={8}
+                placeholder="Re-enter new password"
+                value={cpForm.confirm}
+                onChange={(e) => setCpForm(f => ({ ...f, confirm: e.target.value }))}
+              />
             </div>
-            <div style={{ marginTop: "0.25rem" }}>
-              <button type="submit" className="btn btn-primary" disabled={cpLoading}>
-                {cpLoading ? "Updating…" : "Update Password"}
+
+            <div style={{ marginTop: "0.5rem" }}>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={cpLoading}
+                style={{ padding: "0.55rem 1.25rem" }}
+              >
+                {cpLoading ? "Updating Password…" : "Update Password"}
               </button>
             </div>
           </form>
         </div>
       </div>
-    </>
+    </div>
   );
 }

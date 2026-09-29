@@ -315,7 +315,7 @@ export default function MessagesPage() {
                         <strong
                           style={{
                             fontSize: "0.9rem",
-                            color: hasUnread ? "#fff" : "var(--clr-text)",
+                            color: hasUnread ? "#0f172a" : "var(--clr-text)",
                             fontWeight: hasUnread ? 700 : 500,
                             overflow: "hidden",
                             textOverflow: "ellipsis",
