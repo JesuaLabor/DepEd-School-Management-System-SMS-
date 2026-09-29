@@ -50,14 +50,29 @@ export default function Dashboard() {
     <>
       {/* ── Page Header ────────────────────────────────────────────────────── */}
       <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
-        <div>
-          <h1 style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span>👋 Welcome, {user?.firstName}!</span>
-          </h1>
-          <p style={{ marginTop: "0.25rem" }}>
-            Signed in as <strong style={{ color: "var(--clr-accent)" }}>{user ? ROLE_LABELS[user.role] : ""}</strong>.
-            Here is your real-time DepEd secondary school overview.
-          </p>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <img
+            src="/knhs_logo.png"
+            alt="KNHS Emblem"
+            style={{
+              width: "48px",
+              height: "48px",
+              objectFit: "contain",
+              borderRadius: "50%",
+              background: "#ffffff",
+              padding: "2px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+              flexShrink: 0,
+            }}
+          />
+          <div>
+            <h1 style={{ display: "flex", alignItems: "center", gap: "0.5rem", margin: 0, fontSize: "1.6rem" }}>
+              <span>👋 Welcome, {user?.firstName}!</span>
+            </h1>
+            <p style={{ marginTop: "0.25rem", marginBottom: 0 }}>
+              <strong style={{ color: "var(--clr-text)" }}>Kalilangan National High School</strong> · Signed in as <strong style={{ color: "var(--clr-accent)" }}>{user ? ROLE_LABELS[user.role] : ""}</strong>.
+            </p>
+          </div>
         </div>
 
         {/* Quick Action Navigation */}

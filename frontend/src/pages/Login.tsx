@@ -32,18 +32,31 @@ export default function Login() {
     <div className="login-page">
       {/* Left panel */}
       <div className="login-left">
-        <div className="login-brand">
-          <div className="login-brand-icon">D</div>
+        <div className="login-brand" style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
+          <img
+            src="/knhs_logo.png"
+            alt="Kalilangan National High School Logo"
+            style={{
+              width: "48px",
+              height: "48px",
+              objectFit: "contain",
+              borderRadius: "50%",
+              background: "#ffffff",
+              padding: "2px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+              flexShrink: 0,
+            }}
+          />
           <div className="login-brand-text">
-            <strong>DepEd SMS</strong>
-            <span>School Management System</span>
+            <strong>Kalilangan National High School</strong>
+            <span>DepEd School Management System</span>
           </div>
         </div>
         <div className="login-hero">
           <h1>Streamline your<br /><span>school administration</span></h1>
           <p>
             A centralized platform for managing student records, grades, attendance,
-            and DepEd-compliant reports for JHS and SHS schools.
+            and DepEd-compliant reports for JHS and SHS schools · Kalilangan, Bukidnon.
           </p>
           <div className="login-features">
             {[
@@ -65,8 +78,26 @@ export default function Login() {
       {/* Right panel — form */}
       <div className="login-right">
         <div className="login-form-wrap">
-          <h2>Welcome back</h2>
-          <p>Sign in to your account to continue</p>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.85rem", marginBottom: "1.25rem" }}>
+            <img
+              src="/knhs_logo.png"
+              alt="KNHS Emblem"
+              style={{
+                width: "46px",
+                height: "46px",
+                objectFit: "contain",
+                borderRadius: "50%",
+                background: "#ffffff",
+                padding: "2px",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.12)",
+                flexShrink: 0,
+              }}
+            />
+            <div>
+              <h2 style={{ margin: 0, fontSize: "1.35rem" }}>Welcome back</h2>
+              <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--clr-text-muted)" }}>Kalilangan NHS Faculty & Learner Portal</p>
+            </div>
+          </div>
 
           {error && <div className="alert alert-error mb-4">{error}</div>}
 

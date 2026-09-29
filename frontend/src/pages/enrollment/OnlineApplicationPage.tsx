@@ -137,9 +137,11 @@ export default function OnlineApplicationPage() {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem 1rem", background: "var(--clr-bg)" }}>
         <div className="card" style={{ maxWidth: "600px", width: "100%", padding: "2.5rem 2rem", textAlign: "center" }}>
-          <div style={{ width: "64px", height: "64px", borderRadius: "50%", background: "rgba(34,197,94,0.15)", color: "var(--clr-success)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2rem", margin: "0 auto 1.25rem" }}>
-            ✓
-          </div>
+          <img
+            src="/knhs_logo.png"
+            alt="KNHS Logo"
+            style={{ width: "64px", height: "64px", objectFit: "contain", borderRadius: "50%", background: "#fff", padding: "2px", margin: "0 auto 1.25rem", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}
+          />
           <h2 style={{ fontSize: "1.5rem", fontWeight: 800, marginBottom: "0.5rem" }}>
             Application Submitted!
           </h2>
@@ -187,17 +189,27 @@ export default function OnlineApplicationPage() {
       <div style={{ maxWidth: "780px", margin: "0 auto" }}>
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem" }}>
-            <div style={{ width: "36px", height: "36px", background: "linear-gradient(135deg, var(--clr-primary), var(--clr-accent))", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 800 }}>
-              D
-            </div>
-            <span style={{ fontSize: "1.25rem", fontWeight: 800, letterSpacing: "-0.02em" }}>DepEd Secondary School Management</span>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.85rem", marginBottom: "0.5rem" }}>
+            <img
+              src="/knhs_logo.png"
+              alt="Kalilangan National High School Logo"
+              style={{
+                width: "48px",
+                height: "48px",
+                objectFit: "contain",
+                borderRadius: "50%",
+                background: "#ffffff",
+                padding: "2px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+              }}
+            />
+            <span style={{ fontSize: "1.25rem", fontWeight: 800, letterSpacing: "-0.02em" }}>Kalilangan National High School</span>
           </div>
           <h1 style={{ fontSize: "1.75rem", fontWeight: 800, margin: 0 }}>
             Online Learner Admission & Pre-Enrollment
           </h1>
           <p style={{ color: "var(--clr-text-muted)", fontSize: "0.9rem", marginTop: "0.4rem" }}>
-            Official electronic intake for Junior High (Grades 7–10) and Senior High (Grades 11–12) learners.
+            Official electronic intake for Junior High (Grades 7–10) and Senior High (Grades 11–12) learners · Kalilangan, Bukidnon.
           </p>
         </div>
 

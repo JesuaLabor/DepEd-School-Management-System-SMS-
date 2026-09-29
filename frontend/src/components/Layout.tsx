@@ -110,11 +110,24 @@ export default function Layout() {
     <div className="app-layout">
       {/* ── Sidebar ─────────────────────────────────────────────────────── */}
       <aside className="sidebar">
-        <div className="sidebar-brand">
-          <div className="sidebar-brand-icon">D</div>
+        <div className="sidebar-brand" style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <img
+            src="/knhs_logo.png"
+            alt="KNHS Logo"
+            style={{
+              width: "38px",
+              height: "38px",
+              objectFit: "contain",
+              borderRadius: "50%",
+              background: "#ffffff",
+              padding: "2px",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+              flexShrink: 0,
+            }}
+          />
           <div className="sidebar-brand-text">
-            <strong>DepEd SMS</strong>
-            <span>School Management</span>
+            <strong>KNHS SMS</strong>
+            <span>Kalilangan NHS</span>
           </div>
         </div>
 

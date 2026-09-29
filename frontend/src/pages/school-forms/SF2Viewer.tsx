@@ -151,19 +151,32 @@ export default function SF2Viewer() {
         /* ── Official DepEd School Form 2 (SF2) Layout ── */
         <div className="card sf9-container" style={{ maxWidth: "100%", padding: "1.5rem" }}>
           {/* Header */}
-          <div style={{ textAlign: "center", borderBottom: "2px solid var(--clr-border)", paddingBottom: "1rem", marginBottom: "1.25rem" }}>
-            <div style={{ fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--clr-text-muted)", fontWeight: 600 }}>
-              Republic of the Philippines · Department of Education
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "1.25rem", borderBottom: "2px solid var(--clr-border)", paddingBottom: "1rem", marginBottom: "1.25rem" }}>
+            <img
+              src="/knhs_logo.png"
+              alt="KNHS Official Logo"
+              style={{ width: "55px", height: "55px", objectFit: "contain", flexShrink: 0 }}
+            />
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--clr-text-muted)", fontWeight: 600 }}>
+                Republic of the Philippines · Department of Education
+              </div>
+              <div style={{ fontSize: "0.78rem", color: "var(--clr-text-muted)", marginTop: "0.15rem" }}>
+                Region: <strong>Region X (Northern Mindanao)</strong> · Division: <strong>Division of Bukidnon</strong> · Kalilangan, Bukidnon
+              </div>
+              <h2 style={{ margin: "0.35rem 0 0.15rem 0", fontSize: "1.25rem", fontWeight: 800 }}>
+                School Form 2 (SF2) Daily Attendance Report of Learners
+              </h2>
+              <div style={{ fontSize: "0.8rem", color: "var(--clr-text-muted)" }}>
+                Kalilangan National High School · (Pursuant to DepEd Order No. 58, s. 2017)
+              </div>
             </div>
-            <div style={{ fontSize: "0.78rem", color: "var(--clr-text-muted)", marginTop: "0.15rem" }}>
-              Region: <strong>National Capital Region (NCR)</strong> · Division: <strong>City Schools Division of Manila</strong> · School ID: <strong>301234</strong>
-            </div>
-            <h2 style={{ margin: "0.35rem 0 0.15rem 0", fontSize: "1.25rem", fontWeight: 800 }}>
-              School Form 2 (SF2) Daily Attendance Report of Learners
-            </h2>
-            <div style={{ fontSize: "0.8rem", color: "var(--clr-text-muted)" }}>
-              Rizal National High School · (Pursuant to DepEd Order No. 58, s. 2017)
-            </div>
+            <img
+              src="/knhs_logo.png"
+              alt=""
+              aria-hidden="true"
+              style={{ width: "55px", height: "55px", objectFit: "contain", flexShrink: 0, opacity: 0 }}
+            />
           </div>
 
           {/* School & Section Info */}

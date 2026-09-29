@@ -162,6 +162,16 @@ export default function LearnerPortalPage() {
               {student.firstName[0]}
             </div>
             <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.45rem", marginBottom: "0.2rem" }}>
+                <img
+                  src="/knhs_logo.png"
+                  alt="KNHS"
+                  style={{ width: "20px", height: "20px", objectFit: "contain" }}
+                />
+                <span style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--clr-accent)", fontWeight: 700 }}>
+                  Kalilangan National High School
+                </span>
+              </div>
               <h1 style={{ fontSize: "1.35rem", fontWeight: 800, margin: 0 }}>
                 {student.lastName}, {student.firstName} {student.middleName || ""} {student.extName || ""}
               </h1>

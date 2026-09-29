@@ -1,8 +1,13 @@
 {
-  "short_name": "DepEd SMS",
-  "name": "DepEd School Management System",
-  "description": "Offline-capable K-12 School Management System for Philippine Public Secondary Schools",
+  "short_name": "KNHS SMS",
+  "name": "Kalilangan National High School - DepEd SMS",
+  "description": "Offline-capable K-12 School Management System for Kalilangan National High School",
   "icons": [
+    {
+      "src": "/knhs_logo.png",
+      "type": "image/png",
+      "sizes": "192x192 512x512"
+    },
     {
       "src": "/icon.svg",
       "type": "image/svg+xml",
