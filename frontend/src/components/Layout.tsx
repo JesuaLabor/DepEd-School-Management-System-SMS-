@@ -147,8 +147,9 @@ export default function Layout() {
             </>
           ) : (
             <>
+              {/* ── MAIN ────────────────────────────────────────── */}
               <div className="sidebar-section-label">Main</div>
-              <NavLink to="/"         end className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
+              <NavLink to="/" end className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
                 <Icon.Dashboard /><span>Dashboard</span>
               </NavLink>
               <NavLink to="/messages" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
@@ -157,6 +158,9 @@ export default function Layout() {
               <NavLink to="/announcements" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
                 <Icon.Announcements /><span>Bulletins & Notices</span>
               </NavLink>
+
+              {/* ── ACADEMICS ───────────────────────────────────── */}
+              <div className="sidebar-section-label" style={{ marginTop: "0.75rem" }}>Academics</div>
               <NavLink to="/students" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
                 <Icon.Students /><span>Students</span>
               </NavLink>
@@ -172,16 +176,22 @@ export default function Layout() {
               <NavLink to="/grading" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
                 <Icon.Grading /><span>Grading & SF9</span>
               </NavLink>
+
+              {/* ── SCHOOL OPERATIONS ───────────────────────────── */}
+              <div className="sidebar-section-label" style={{ marginTop: "0.75rem" }}>School Operations</div>
+              {isAdmin && (
+                <NavLink to="/enrollments" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
+                  <Icon.Enrollment /><span>Enrollments</span>
+                </NavLink>
+              )}
               <NavLink to="/school-forms" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
-                <Icon.SchoolForms /><span>School Forms (SF)</span>
+                <Icon.SchoolForms /><span>School Forms</span>
               </NavLink>
 
+              {/* ── ADMINISTRATION ──────────────────────────────── */}
               {isAdmin && (
                 <>
-                  <div className="sidebar-section-label" style={{ marginTop: "0.5rem" }}>Administration</div>
-                  <NavLink to="/enrollments" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
-                    <Icon.Enrollment /><span>Enrollments</span>
-                  </NavLink>
+                  <div className="sidebar-section-label" style={{ marginTop: "0.75rem" }}>Administration</div>
                   <NavLink to="/users" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
                     <Icon.Users /><span>User Management</span>
                   </NavLink>
@@ -190,7 +200,7 @@ export default function Layout() {
             </>
           )}
 
-          <div className="sidebar-section-label" style={{ marginTop: "0.5rem" }}>Account</div>
+          <div className="sidebar-section-label" style={{ marginTop: "0.75rem" }}>Account</div>
           <NavLink to="/profile" className={({ isActive }) => `sidebar-link${isActive ? " active" : ""}`}>
             <Icon.Profile /><span>Profile</span>
           </NavLink>
