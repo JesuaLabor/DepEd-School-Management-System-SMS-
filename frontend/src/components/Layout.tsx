@@ -1,7 +1,10 @@
+import { useState, useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { ROLE_LABELS } from "@/types";
 import OfflineBanner from "./OfflineBanner";
+import CommandPalette from "./CommandPalette";
+import NotificationPopover from "./NotificationPopover";
 
 /* ── Crisp Institutional SVG Icons (Matching UI_recommendation.png) ──────── */
 const Icon = {
@@ -108,8 +111,23 @@ export default function Layout() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+
   const isAdmin = user?.role === "super_admin" || user?.role === "registrar";
   const initials = user ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : "AR";
+
+  // Global shortcut: ⌘K or Ctrl+K opens Command Palette
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setShowCommandPalette((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Dynamic greeting based on current time
   const hour = new Date().getHours();
@@ -395,8 +413,9 @@ export default function Layout() {
 
           {/* Right: Search Bar, Notifications, Profile Avatar */}
           <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            {/* Search Input */}
+            {/* Search Input (Triggers Command Palette) */}
             <div
+              onClick={() => setShowCommandPalette(true)}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -408,11 +427,15 @@ export default function Layout() {
                 width: "320px",
                 color: "#94a3b8",
                 fontSize: "0.825rem",
+                cursor: "pointer",
+                transition: "border-color 0.2s, background 0.2s",
               }}
+              title="Click or press ⌘K to open command search"
             >
               <Icon.Search />
               <input
                 type="text"
+                readOnly
                 placeholder="Search students, sections, or features..."
                 style={{
                   background: "transparent",
@@ -421,6 +444,7 @@ export default function Layout() {
                   color: "#f1f5f9",
                   fontSize: "0.78rem",
                   width: "100%",
+                  cursor: "pointer",
                 }}
               />
               <span
@@ -439,24 +463,25 @@ export default function Layout() {
               </span>
             </div>
 
-            {/* Notification Bell with Badge */}
+            {/* Notification Bell with Badge & Interactive Popover */}
             <div style={{ position: "relative" }}>
               <button
                 type="button"
-                onClick={() => navigate("/announcements")}
+                onClick={() => setShowNotifications((prev) => !prev)}
                 style={{
                   width: "38px",
                   height: "38px",
                   borderRadius: "50%",
-                  background: "#17233d",
+                  background: showNotifications ? "#2563eb" : "#17233d",
                   border: "1px solid #2a3b5c",
                   color: "#f1f5f9",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   cursor: "pointer",
+                  transition: "background 0.2s ease",
                 }}
-                title="Notifications & Bulletins"
+                title="Notifications & System Alerts"
               >
                 <Icon.Bell />
               </button>
@@ -476,10 +501,17 @@ export default function Layout() {
                   alignItems: "center",
                   justifyContent: "center",
                   border: "2px solid #0c1427",
+                  pointerEvents: "none",
                 }}
               >
                 3
               </span>
+
+              {/* Notification Popover Dropdown */}
+              <NotificationPopover
+                isOpen={showNotifications}
+                onClose={() => setShowNotifications(false)}
+              />
             </div>
 
             {/* Avatar Pill */}
@@ -512,6 +544,12 @@ export default function Layout() {
           <Outlet />
         </div>
       </main>
+
+      {/* Global ⌘K Command Palette */}
+      <CommandPalette
+        isOpen={showCommandPalette}
+        onClose={() => setShowCommandPalette(false)}
+      />
     </div>
   );
 }

@@ -1,5 +1,7 @@
+import { useState } from "react";
 import type { Student } from "@/types";
 import { STRAND_LABELS, STATUS_LABELS } from "@/types";
+import StudentIDModal from "@/components/StudentIDModal";
 
 interface Props {
   student:  Student;
@@ -23,6 +25,7 @@ function statusBadge(status: Student["status"]) {
 }
 
 export default function StudentDrawer({ student: s, onClose, onEdit, onStatus }: Props) {
+  const [showIDModal, setShowIDModal] = useState(false);
   const initials = `${s.firstName[0]}${s.lastName[0]}`.toUpperCase();
   const isSHS    = s.gradeLevel >= 11;
   const fullName = [s.lastName, s.firstName, s.middleName].filter(Boolean).join(", ");
@@ -137,10 +140,27 @@ export default function StudentDrawer({ student: s, onClose, onEdit, onStatus }:
               ))}
             </div>
           )}
+          <button
+            type="button"
+            className="btn btn-outline btn-sm"
+            style={{ display: "inline-flex", alignItems: "center", gap: "5px", color: "var(--clr-primary, #2563eb)", borderColor: "rgba(37, 99, 235, 0.4)" }}
+            onClick={() => setShowIDModal(true)}
+            title="Generate and Print DepEd Student ID Card with QR Code"
+          >
+            <span>🪪</span>
+            <span>Student ID</span>
+          </button>
           <button className="btn btn-ghost btn-sm" onClick={onClose}>Close</button>
           <button className="btn btn-primary btn-sm" onClick={onEdit}>✎ Edit</button>
         </div>
       </div>
+
+      {showIDModal && (
+        <StudentIDModal
+          student={s}
+          onClose={() => setShowIDModal(false)}
+        />
+      )}
     </>
   );
 }

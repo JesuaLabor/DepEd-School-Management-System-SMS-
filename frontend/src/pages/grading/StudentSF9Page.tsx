@@ -467,22 +467,119 @@ export default function StudentSF9Page() {
             </div>
           </div>
 
-          {/* ── PART D: SIGNATURES & CERTIFICATION ── */}
-          <div style={{ borderTop: "2px solid var(--clr-border)", paddingTop: "2rem", marginTop: "2rem", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "3rem" }}>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ borderBottom: "1px solid var(--clr-text)", height: "40px", marginBottom: "0.5rem" }} />
-              <strong>{sf9.section.adviser ? `${sf9.section.adviser.firstName} ${sf9.section.adviser.lastName}` : "Class Adviser"}</strong>
-              <div style={{ fontSize: "0.75rem", color: "var(--clr-text-muted)" }}>Class Adviser</div>
+          {/* ── PART D: PARENT / GUARDIAN'S SIGNATURE ── */}
+          <div style={{ marginBottom: "2rem" }}>
+            <h4 style={{ margin: "0 0 0.6rem 0", fontSize: "0.95rem", fontWeight: 700, color: "var(--clr-text)" }}>
+              PARENT / GUARDIAN'S SIGNATURE
+            </h4>
+            <div style={{ overflowX: "auto" }}>
+              <table className="data-table" style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
+                <thead>
+                  <tr>
+                    <th style={{ width: "25%" }}>Quarter</th>
+                    <th style={{ width: "50%" }}>Signature over Printed Name of Parent / Guardian</th>
+                    <th style={{ width: "25%" }}>Date Received</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>1st Quarter</strong></td>
+                    <td style={{ height: "36px" }} />
+                    <td />
+                  </tr>
+                  <tr>
+                    <td><strong>2nd Quarter</strong></td>
+                    <td style={{ height: "36px" }} />
+                    <td />
+                  </tr>
+                  <tr>
+                    <td><strong>3rd Quarter</strong></td>
+                    <td style={{ height: "36px" }} />
+                    <td />
+                  </tr>
+                  <tr>
+                    <td><strong>4th Quarter</strong></td>
+                    <td style={{ height: "36px" }} />
+                    <td />
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* ── PART E: CERTIFICATE OF TRANSFER & SIGNATURES ── */}
+          <div style={{ borderTop: "2px solid var(--clr-border)", paddingTop: "1.5rem", marginTop: "1.5rem" }}>
+            <div style={{ background: "var(--clr-surface-2)", padding: "1rem 1.25rem", borderRadius: "var(--radius)", marginBottom: "1.5rem", fontSize: "0.825rem", lineHeight: 1.6 }}>
+              <div style={{ fontWeight: 700, textTransform: "uppercase", fontSize: "0.75rem", color: "var(--clr-text-muted)", marginBottom: "4px" }}>
+                Certificate of Transfer & Promotion
+              </div>
+              <div>
+                Admitted to Grade: <strong>Grade {sf9.gradeLevel}</strong> · Section: <strong>{sf9.section.name || "N/A"}</strong>
+              </div>
+              <div>
+                Eligibility for Admission to Grade: <strong>Grade {sf9.remarks === "Promoted" ? sf9.gradeLevel + 1 : sf9.gradeLevel}</strong>
+              </div>
+              <div style={{ color: "var(--clr-text-muted)", fontSize: "0.78rem", marginTop: "2px" }}>
+                Cancellation of Eligibility to Transfer: Lacks credit in (Subjects): <em>None</em>
+              </div>
             </div>
 
-            <div style={{ textAlign: "center" }}>
-              <div style={{ borderBottom: "1px solid var(--clr-text)", height: "40px", marginBottom: "0.5rem" }} />
-              <strong>School Principal / Head</strong>
-              <div style={{ fontSize: "0.75rem", color: "var(--clr-text-muted)" }}>School Head</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "3rem", marginTop: "2rem" }}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ borderBottom: "1px solid var(--clr-text)", height: "40px", marginBottom: "0.5rem" }} />
+                <strong style={{ fontSize: "0.95rem" }}>
+                  {sf9.section.adviser ? `${sf9.section.adviser.firstName} ${sf9.section.adviser.lastName}` : "Class Adviser"}
+                </strong>
+                <div style={{ fontSize: "0.75rem", color: "var(--clr-text-muted)" }}>Class Adviser</div>
+              </div>
+
+              <div style={{ textAlign: "center" }}>
+                <div style={{ borderBottom: "1px solid var(--clr-text)", height: "40px", marginBottom: "0.5rem" }} />
+                <strong style={{ fontSize: "0.95rem" }}>MA. ELENA V. ALMINE</strong>
+                <div style={{ fontSize: "0.75rem", color: "var(--clr-text-muted)" }}>Secondary School Principal IV</div>
+              </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* ── Official DepEd SF9 Print Stylesheet ── */}
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .sf9-container, .sf9-container * {
+            visibility: visible;
+          }
+          .sf9-container {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 20px !important;
+            box-shadow: none !important;
+            border: 1px solid #1a2744 !important;
+            background: #ffffff !important;
+            color: #0c1427 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .no-print, .sidebar, header, nav {
+            display: none !important;
+          }
+          table.data-table th, table.data-table td {
+            border: 1px solid #94a3b8 !important;
+            color: #0c1427 !important;
+          }
+          @page {
+            size: A4 portrait;
+            margin: 10mm;
+          }
+        }
+      `}</style>
     </div>
   );
 }

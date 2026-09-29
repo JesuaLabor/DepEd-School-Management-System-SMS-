@@ -5,6 +5,7 @@ import { ROLE_LABELS } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 import BulkImportModal from "./BulkImportModal";
 import ResetPasswordModal from "./ResetPasswordModal";
+import { exportToCsv, type CsvColumn } from "@/utils/exportCsv";
 
 const ROLES: Role[] = ["super_admin", "registrar", "teacher", "student", "guardian"];
 
@@ -183,6 +184,19 @@ export default function UserManagement() {
   const teachersCount = users.filter(u => u.role === "teacher").length;
   const adminCount = users.filter(u => u.role === "super_admin" || u.role === "registrar").length;
 
+  function handleExportCsv() {
+    const columns: CsvColumn<User>[] = [
+      { label: "User ID", key: "id" },
+      { label: "First Name", key: "firstName" },
+      { label: "Last Name", key: "lastName" },
+      { label: "Email", key: "email" },
+      { label: "Role", key: (u) => ROLE_LABELS[u.role] || u.role },
+      { label: "Status", key: (u) => u.isActive ? "Active" : "Inactive" },
+      { label: "Created At", key: (u) => u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-PH") : "" },
+    ];
+    exportToCsv(`DepEd_KNHS_Users_${new Date().toISOString().split("T")[0]}`, columns, filtered);
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
       {/* ── Sub-Header & Actions ────────────────────────────────────────── */}
@@ -209,6 +223,24 @@ export default function UserManagement() {
             <button
               type="button"
               className="btn btn-outline"
+              onClick={handleExportCsv}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.45rem",
+                background: "#ffffff",
+                borderColor: "#cbd5e1",
+                color: "#334155",
+                fontWeight: 600,
+              }}
+              title="Export filtered personnel list to CSV"
+            >
+              <span>📥</span>
+              <span>Export CSV</span>
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline"
               onClick={() => setShowBulkImport(true)}
               style={{
                 display: "inline-flex",
@@ -216,7 +248,7 @@ export default function UserManagement() {
                 gap: "0.45rem",
               }}
             >
-              <span>📥</span>
+              <span>📑</span>
               <span>Bulk CSV Import</span>
             </button>
             <button

@@ -5,6 +5,7 @@ import { api } from "@/services/api";
 import StudentDrawer from "./StudentDrawer";
 import StudentForm from "./StudentForm";
 import { useAuth } from "@/context/AuthContext";
+import { exportToCsv, type CsvColumn } from "@/utils/exportCsv";
 
 function statusBadge(s: EnrollmentStatus) {
   const cls = {
@@ -94,6 +95,30 @@ export default function StudentList() {
   const shsCount = students.filter(s => s.gradeLevel >= 11).length;
   const enrolledCount = students.filter(s => s.status === "enrolled").length;
 
+  function handleExportCsv() {
+    const columns: CsvColumn<Student>[] = [
+      { label: "LRN", key: "lrn" },
+      { label: "Last Name", key: "lastName" },
+      { label: "First Name", key: "firstName" },
+      { label: "Middle Name", key: (s) => s.middleName || "" },
+      { label: "Extension", key: (s) => s.extName || "" },
+      { label: "Sex", key: "sex" },
+      { label: "Birthdate", key: (s) => s.birthDate ? s.birthDate.split("T")[0] : "" },
+      { label: "Grade Level", key: "gradeLevel" },
+      { label: "Strand", key: (s) => s.strand ? (STRAND_LABELS[s.strand] || s.strand) : "" },
+      { label: "Status", key: (s) => STATUS_LABELS[s.status] || s.status },
+      { label: "School Year", key: "schoolYear" },
+      { label: "Contact No", key: (s) => s.contactNo || "" },
+      { label: "Email", key: (s) => s.email || "" },
+      { label: "Guardian Name", key: (s) => s.guardian?.name || "" },
+      { label: "Guardian Contact", key: (s) => s.guardian?.contactNo || "" },
+      { label: "Barangay", key: (s) => s.address?.barangay || "" },
+      { label: "Municipality", key: (s) => s.address?.city || "" },
+      { label: "Province", key: (s) => s.address?.province || "" },
+    ];
+    exportToCsv(`DepEd_KNHS_Students_${new Date().toISOString().split("T")[0]}`, columns, students);
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
       {/* ── Sub-Header & Action ────────────────────────────────────────── */}
@@ -115,21 +140,42 @@ export default function StudentList() {
           </p>
         </div>
 
-        {canEdit && (
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
           <button
             type="button"
-            className="btn btn-primary"
-            onClick={() => setShowAdd(true)}
+            className="btn btn-outline"
+            onClick={handleExportCsv}
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: "0.45rem",
+              background: "#ffffff",
+              borderColor: "#cbd5e1",
+              color: "#334155",
+              fontWeight: 600,
             }}
+            title="Export full learner directory to CSV spreadsheet"
           >
-            <span>+</span>
-            <span>Enroll New Student</span>
+            <span>📥</span>
+            <span>Export CSV</span>
           </button>
-        )}
+
+          {canEdit && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => setShowAdd(true)}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.45rem",
+              }}
+            >
+              <span>+</span>
+              <span>Enroll New Student</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ── 4 Top KPI Stat Cards ──────────────────────────────────────────── */}
