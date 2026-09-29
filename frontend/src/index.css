@@ -163,6 +163,39 @@ input, select, textarea { font-family: inherit; }
 .sidebar-link svg { flex-shrink: 0; opacity: 0.8; }
 .sidebar-link.active svg { opacity: 1; color: var(--clr-accent-light); }
 
+/* UI_recommendation exact sidebar navigation styling */
+.sidebar-item-link {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 8px;
+  color: #8fa3bf;
+  font-size: 0.84rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+.sidebar-item-link:hover {
+  background: #172338;
+  color: #ffffff;
+  text-decoration: none;
+}
+.sidebar-item-link.is-active {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.35);
+}
+.sidebar-item-link svg {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+.sidebar-item-link.is-active svg {
+  opacity: 1;
+  color: #ffffff;
+}
+
 .sidebar-footer {
   padding: 1rem 0.75rem;
   border-top: 1px solid var(--clr-border-soft);
