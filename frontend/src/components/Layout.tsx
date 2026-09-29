@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { ROLE_LABELS } from "@/types";
@@ -8,6 +8,13 @@ import NotificationPopover from "./NotificationPopover";
 
 /* ── Crisp Institutional SVG Icons (Matching UI_recommendation.png) ──────── */
 const Icon = {
+  Logout: () => (
+    <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  ),
   Dashboard: () => (
     <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
       <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -108,14 +115,34 @@ const Icon = {
 };
 
 export default function Layout() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   const isAdmin = user?.role === "super_admin" || user?.role === "registrar";
   const initials = user ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : "AR";
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  // Close user menu on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false);
+      }
+    }
+    if (showUserMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showUserMenu]);
 
   // Global shortcut: ⌘K or Ctrl+K opens Command Palette
   useEffect(() => {
@@ -359,8 +386,40 @@ export default function Layout() {
                 {user ? ROLE_LABELS[user.role] : "Super Admin"}
               </div>
             </div>
-            <div style={{ color: "#64748b" }}>
-              <Icon.ChevronRight />
+            <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleLogout();
+                }}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "#64748b",
+                  cursor: "pointer",
+                  padding: "6px",
+                  borderRadius: "6px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "color 0.15s, background 0.15s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = "#ef4444";
+                  e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = "#64748b";
+                  e.currentTarget.style.background = "transparent";
+                }}
+                title="Sign Out / Log Out"
+              >
+                <Icon.Logout />
+              </button>
+              <div style={{ color: "#64748b" }}>
+                <Icon.ChevronRight />
+              </div>
             </div>
           </div>
         </div>
@@ -514,28 +573,150 @@ export default function Layout() {
               />
             </div>
 
-            {/* Avatar Pill */}
-            <button
-              type="button"
-              onClick={() => navigate("/profile")}
-              style={{
-                width: "38px",
-                height: "38px",
-                borderRadius: "50%",
-                background: "#2563eb",
-                color: "#ffffff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: 700,
-                fontSize: "0.85rem",
-                border: "2px solid rgba(255,255,255,0.2)",
-                cursor: "pointer",
-              }}
-              title="Open Profile"
-            >
-              {initials}
-            </button>
+            {/* Avatar Pill with Dropdown Menu */}
+            <div ref={userMenuRef} style={{ position: "relative" }}>
+              <button
+                type="button"
+                onClick={() => setShowUserMenu((prev) => !prev)}
+                style={{
+                  width: "38px",
+                  height: "38px",
+                  borderRadius: "50%",
+                  background: "#2563eb",
+                  color: "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 700,
+                  fontSize: "0.85rem",
+                  border: showUserMenu ? "2px solid #60a5fa" : "2px solid rgba(255,255,255,0.2)",
+                  cursor: "pointer",
+                  transition: "border-color 0.15s ease",
+                }}
+                title="Account Menu"
+              >
+                {initials}
+              </button>
+
+              {/* User Dropdown */}
+              {showUserMenu && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "48px",
+                    right: 0,
+                    width: "250px",
+                    background: "#0f172a",
+                    border: "1px solid #1e293b",
+                    borderRadius: "14px",
+                    boxShadow: "0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05)",
+                    zIndex: 200,
+                    overflow: "hidden",
+                  }}
+                >
+                  {/* User Info Header */}
+                  <div style={{ padding: "0.9rem 1.1rem", borderBottom: "1px solid #1e293b", background: "#0c1322" }}>
+                    <div style={{ fontSize: "0.875rem", fontWeight: 700, color: "#f8fafc", lineHeight: 1.2 }}>
+                      {user ? `${user.firstName} ${user.lastName}` : "User"}
+                    </div>
+                    <div style={{ fontSize: "0.74rem", color: "#8fa3bf", marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {user?.email || "user@knhs.edu.ph"}
+                    </div>
+                    <div style={{ marginTop: "6px" }}>
+                      <span
+                        style={{
+                          fontSize: "0.68rem",
+                          fontWeight: 700,
+                          background: "rgba(37, 99, 235, 0.2)",
+                          color: "#60a5fa",
+                          border: "1px solid rgba(37, 99, 235, 0.4)",
+                          padding: "2px 8px",
+                          borderRadius: "4px",
+                          display: "inline-block",
+                        }}
+                      >
+                        {user ? ROLE_LABELS[user.role] : "Staff"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Menu Items */}
+                  <div style={{ padding: "0.4rem" }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        navigate("/profile");
+                      }}
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.65rem",
+                        padding: "0.55rem 0.75rem",
+                        borderRadius: "8px",
+                        border: "none",
+                        background: "transparent",
+                        color: "#cbd5e1",
+                        fontSize: "0.825rem",
+                        fontWeight: 500,
+                        cursor: "pointer",
+                        textAlign: "left",
+                        transition: "background 0.15s, color 0.15s",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "#1e293b";
+                        e.currentTarget.style.color = "#ffffff";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.color = "#cbd5e1";
+                      }}
+                    >
+                      <span style={{ fontSize: "0.95rem" }}>⚙️</span>
+                      <span>Account Settings</span>
+                    </button>
+
+                    <div style={{ height: "1px", background: "#1e293b", margin: "0.3rem 0" }} />
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        handleLogout();
+                      }}
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.65rem",
+                        padding: "0.55rem 0.75rem",
+                        borderRadius: "8px",
+                        border: "none",
+                        background: "transparent",
+                        color: "#f87171",
+                        fontSize: "0.825rem",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        textAlign: "left",
+                        transition: "background 0.15s",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)";
+                        e.currentTarget.style.color = "#ef4444";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.color = "#f87171";
+                      }}
+                    >
+                      <Icon.Logout />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/services/api";
+import { useAuth } from "@/context/AuthContext";
 import type { Student } from "@/types";
 
 interface CommandPaletteProps {
@@ -15,6 +16,7 @@ interface PaletteAction {
   icon: string;
   path: string;
   shortcut?: string;
+  isLogout?: boolean;
 }
 
 const STATIC_ACTIONS: PaletteAction[] = [
@@ -38,10 +40,12 @@ const STATIC_ACTIONS: PaletteAction[] = [
   { id: "act-sf2", title: "Generate Monthly SF2 Attendance Report", category: "Action", icon: "📊", path: "/school-forms", shortcut: "S" },
   { id: "act-announcement", title: "Post Urgent School Advisory", category: "Action", icon: "🚨", path: "/announcements" },
   { id: "act-users", title: "Create New Faculty / Staff Account", category: "Action", icon: "👤", path: "/users" },
+  { id: "act-logout", title: "Sign Out / Log Out of KNHS SMS", category: "Action", icon: "🚪", path: "/login", isLogout: true, shortcut: "Q" },
 ];
 
 export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [query, setQuery] = useState("");
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -93,7 +97,12 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
   const handleSelect = (index: number) => {
     if (index < filteredActions.length) {
       const action = filteredActions[index];
-      navigate(action.path);
+      if (action.isLogout) {
+        logout();
+        navigate("/login");
+      } else {
+        navigate(action.path);
+      }
       onClose();
     } else {
       const studentIndex = index - filteredActions.length;

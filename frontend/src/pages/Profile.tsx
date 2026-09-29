@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { ROLE_LABELS } from "@/types";
 import { api } from "@/services/api";
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   /* Change password form */
   const [cpForm, setCpForm] = useState({ current: "", next: "", confirm: "" });
@@ -134,6 +136,42 @@ export default function Profile() {
               </div>
             </div>
           </div>
+
+          <div style={{ height: "1px", background: "#f1f5f9" }} />
+
+          <button
+            type="button"
+            onClick={() => {
+              logout();
+              navigate("/login");
+            }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.5rem",
+              background: "#fff1f2",
+              border: "1px solid #fecdd3",
+              color: "#e11d48",
+              borderRadius: "10px",
+              padding: "0.65rem 1rem",
+              fontSize: "0.85rem",
+              fontWeight: 700,
+              cursor: "pointer",
+              transition: "background 0.15s, border-color 0.15s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "#ffe4e6";
+              e.currentTarget.style.borderColor = "#fda4af";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "#fff1f2";
+              e.currentTarget.style.borderColor = "#fecdd3";
+            }}
+          >
+            <span>🚪</span>
+            <span>Sign Out of KNHS SMS</span>
+          </button>
         </div>
 
         {/* ── Right Column: Password Management Card ─────────────────────── */}
