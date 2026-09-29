@@ -115,7 +115,7 @@ export default function NewEnrollmentModal({ schoolYear, onClose, onCreated }: P
                   width: 32, height: 32, borderRadius: "50%",
                   background: selected.sex === "Female"
                     ? "linear-gradient(135deg,#db2777,#f43f5e)"
-                    : "linear-gradient(135deg,#2563eb,#0ea5e9)",
+                    : "linear-gradient(135deg, #1e40af, #3b82f6)",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontSize: "0.7rem", fontWeight: 700, color: "#fff", flexShrink: 0,
                 }}>
@@ -156,7 +156,7 @@ export default function NewEnrollmentModal({ schoolYear, onClose, onCreated }: P
                           width: 30, height: 30, borderRadius: "50%",
                           background: s.sex === "Female"
                             ? "linear-gradient(135deg,#db2777,#f43f5e)"
-                            : "linear-gradient(135deg,#2563eb,#0ea5e9)",
+                            : "linear-gradient(135deg, #1e40af, #3b82f6)",
                           display: "flex", alignItems: "center", justifyContent: "center",
                           fontSize: "0.65rem", fontWeight: 700, color: "#fff", flexShrink: 0,
                         }}>

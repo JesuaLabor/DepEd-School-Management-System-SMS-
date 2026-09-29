@@ -117,7 +117,7 @@ export default function OfflineBanner() {
     return (
       <div
         style={{
-          background: "linear-gradient(90deg, #2563eb, #3b82f6)",
+          background: "linear-gradient(90deg, #1e40af, #1e3a8a)",
           color: "#ffffff",
           padding: "0.55rem 1rem",
           display: "flex",
@@ -125,7 +125,8 @@ export default function OfflineBanner() {
           alignItems: "center",
           fontSize: "0.825rem",
           fontWeight: 600,
-          boxShadow: "0 2px 8px rgba(37, 99, 235, 0.25)",
+          borderBottom: "1px solid rgba(245, 158, 11, 0.4)",
+          boxShadow: "0 2px 8px rgba(30, 64, 175, 0.35)",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>

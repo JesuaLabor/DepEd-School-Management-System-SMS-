@@ -237,7 +237,7 @@ export default function ResetPasswordModal({ user, onClose, onSuccess }: ResetPa
             >
               <div><strong>Account:</strong> {user.firstName} {user.lastName}</div>
               <div><strong>Email:</strong> {user.email}</div>
-              <div><strong>New Password:</strong> <span style={{ color: "#2563eb", fontWeight: 700 }}>{successResult.newPassword}</span></div>
+              <div><strong>New Password:</strong> <span style={{ color: "var(--clr-accent-light, #fbbf24)", fontWeight: 700 }}>{successResult.newPassword}</span></div>
             </div>
 
             <div className="modal-footer" style={{ display: "flex", justifyContent: "space-between" }}>

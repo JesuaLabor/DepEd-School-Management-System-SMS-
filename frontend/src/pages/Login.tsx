@@ -182,14 +182,14 @@ export default function Login() {
             marginTop: "1.25rem",
             padding: "0.85rem",
             borderRadius: "0.5rem",
-            background: "linear-gradient(135deg, rgba(30, 64, 175, 0.05), rgba(14, 165, 233, 0.05))",
-            border: "1px solid rgba(30, 64, 175, 0.15)",
+            background: "linear-gradient(135deg, rgba(30, 64, 175, 0.15), rgba(245, 158, 11, 0.08))",
+            border: "1px solid rgba(245, 158, 11, 0.3)",
             textAlign: "center"
           }}>
-            <div style={{ fontSize: "0.825rem", fontWeight: 600, color: "var(--clr-primary, #1e40af)" }}>
+            <div style={{ fontSize: "0.825rem", fontWeight: 600, color: "var(--clr-accent-light, #fbbf24)" }}>
               🎓 Incoming Student or Transferee?
             </div>
-            <p style={{ fontSize: "0.75rem", color: "var(--clr-text-muted, #64748b)", margin: "0.25rem 0 0.6rem" }}>
+            <p style={{ fontSize: "0.75rem", color: "var(--clr-text-muted, #8fa3bf)", margin: "0.25rem 0 0.6rem" }}>
               Submit an online enrollment application for JHS or SHS without an account.
             </p>
             <button
@@ -199,21 +199,22 @@ export default function Login() {
                 width: "100%",
                 padding: "0.5rem 0.75rem",
                 borderRadius: "0.375rem",
-                background: "var(--clr-primary, #1e40af)",
+                background: "linear-gradient(135deg, #1e40af, #1e3a8a)",
                 color: "#ffffff",
                 fontSize: "0.8rem",
                 fontWeight: 600,
-                border: "none",
+                border: "1px solid rgba(245, 158, 11, 0.35)",
                 cursor: "pointer",
+                boxShadow: "0 2px 6px rgba(30, 64, 175, 0.3)",
               }}
             >
               Open Online Admission Portal →
             </button>
           </div>
 
-          <div style={{ marginTop: "1rem", padding: "0.75rem", borderRadius: "0.375rem", background: "var(--bg-subtle, #f8fafc)", border: "1px dashed var(--border-color, #cbd5e1)", fontSize: "0.8125rem", color: "var(--text-muted, #64748b)" }}>
-            <span style={{ fontWeight: 600, color: "var(--text-main, #1e293b)" }}>Default Admin Credentials:</span><br />
-            Email: <code>admin@deped.gov.ph</code><br />
+          <div style={{ marginTop: "1rem", padding: "0.75rem", borderRadius: "0.375rem", background: "rgba(30, 64, 175, 0.08)", border: "1px dashed var(--clr-border, #22334d)", fontSize: "0.8125rem", color: "var(--clr-text-muted, #8fa3bf)" }}>
+            <span style={{ fontWeight: 600, color: "var(--clr-text, #f1f5f9)" }}>Default Admin Credentials:</span><br />
+            Email: <code style={{ color: "var(--clr-accent-light, #fbbf24)" }}>admin@deped.gov.ph</code><br />
             Password: <code>AdminPass123!</code>
           </div>
         </div>

@@ -108,7 +108,7 @@ export default function Dashboard() {
         <div className="stats-grid mb-6">
           <div className="stat-card">
             <div className="stat-icon">👩‍🎓</div>
-            <div className="stat-value" style={{ color: "#2563eb" }}>
+            <div className="stat-value" style={{ color: "var(--clr-primary-light, #60a5fa)" }}>
               {loading ? "..." : summary?.totalStudents ?? 0}
             </div>
             <div className="stat-label">Total Learners</div>
@@ -119,7 +119,7 @@ export default function Dashboard() {
 
           <div className="stat-card">
             <div className="stat-icon">🏫</div>
-            <div className="stat-value" style={{ color: "#0ea5e9" }}>
+            <div className="stat-value" style={{ color: "var(--clr-accent-light, #fbbf24)" }}>
               {loading ? "..." : `${summary?.jhsCount ?? 0} / ${summary?.shsCount ?? 0}`}
             </div>
             <div className="stat-label">JHS / SHS Distribution</div>
@@ -204,8 +204,8 @@ export default function Dashboard() {
                             height: "100%",
                             width: `${pct}%`,
                             background: isSHS
-                              ? "linear-gradient(90deg, #6366f1, #8b5cf6)"
-                              : "linear-gradient(90deg, #2563eb, #0ea5e9)",
+                              ? "linear-gradient(90deg, #f59e0b, #fbbf24)"
+                              : "linear-gradient(90deg, #1e40af, #3b82f6)",
                             borderRadius: "6px",
                             transition: "width 0.4s ease",
                           }}
@@ -325,11 +325,11 @@ export default function Dashboard() {
             {totalGraded > 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
                 {[
-                  { label: "Outstanding (90–100)",          count: perf?.outstanding ?? 0,        color: "#22c55e" },
+                  { label: "Outstanding (90–100)",          count: perf?.outstanding ?? 0,        color: "#16a34a" },
                   { label: "Very Satisfactory (85–89)",      count: perf?.verySatisfactory ?? 0,    color: "#3b82f6" },
-                  { label: "Satisfactory (80–84)",           count: perf?.satisfactory ?? 0,        color: "#0ea5e9" },
+                  { label: "Satisfactory (80–84)",           count: perf?.satisfactory ?? 0,        color: "#60a5fa" },
                   { label: "Fairly Satisfactory (75–79)",    count: perf?.fairlySatisfactory ?? 0,  color: "#f59e0b" },
-                  { label: "Did Not Meet Expectations (<75)", count: perf?.didNotMeet ?? 0,          color: "#ef4444" },
+                  { label: "Did Not Meet Expectations (<75)", count: perf?.didNotMeet ?? 0,          color: "#dc2626" },
                 ].map((tier) => {
                   const pct = Math.round((tier.count / totalGraded) * 100);
                   return (

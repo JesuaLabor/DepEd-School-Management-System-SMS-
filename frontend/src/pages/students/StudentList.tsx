@@ -182,7 +182,7 @@ export default function StudentList() {
                         width: 30, height: 30, borderRadius: "50%", flexShrink: 0,
                         background: s.sex === "Female"
                           ? "linear-gradient(135deg,#db2777,#f43f5e)"
-                          : "linear-gradient(135deg,#2563eb,#0ea5e9)",
+                          : "linear-gradient(135deg, #1e40af, #3b82f6)",
                         display: "flex", alignItems: "center", justifyContent: "center",
                         fontSize: "0.65rem", fontWeight: 700, color: "#fff",
                       }}>

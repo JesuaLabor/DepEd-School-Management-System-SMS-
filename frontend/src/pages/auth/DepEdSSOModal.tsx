@@ -150,8 +150,8 @@ export default function DepEdSSOModal({ onClose }: DepEdSSOModalProps) {
               padding: "0.5rem 1rem",
               background: "transparent",
               border: "none",
-              borderBottom: activeTab === "quick" ? "2px solid #2563eb" : "2px solid transparent",
-              color: activeTab === "quick" ? "#2563eb" : "var(--clr-text-muted, #64748b)",
+              borderBottom: activeTab === "quick" ? "2px solid var(--clr-accent, #f59e0b)" : "2px solid transparent",
+              color: activeTab === "quick" ? "var(--clr-accent-light, #fbbf24)" : "var(--clr-text-muted, #8fa3bf)",
               fontWeight: activeTab === "quick" ? 700 : 500,
               fontSize: "0.85rem",
               cursor: "pointer",
@@ -166,8 +166,8 @@ export default function DepEdSSOModal({ onClose }: DepEdSSOModalProps) {
               padding: "0.5rem 1rem",
               background: "transparent",
               border: "none",
-              borderBottom: activeTab === "custom" ? "2px solid #2563eb" : "2px solid transparent",
-              color: activeTab === "custom" ? "#2563eb" : "var(--clr-text-muted, #64748b)",
+              borderBottom: activeTab === "custom" ? "2px solid var(--clr-accent, #f59e0b)" : "2px solid transparent",
+              color: activeTab === "custom" ? "var(--clr-accent-light, #fbbf24)" : "var(--clr-text-muted, #8fa3bf)",
               fontWeight: activeTab === "custom" ? 700 : 500,
               fontSize: "0.85rem",
               cursor: "pointer",
@@ -180,7 +180,7 @@ export default function DepEdSSOModal({ onClose }: DepEdSSOModalProps) {
         {/* TAB 1: Quick Select Account */}
         {activeTab === "quick" && (
           <div>
-            <p style={{ fontSize: "0.82rem", color: "var(--clr-text-muted, #64748b)", marginBottom: "1rem" }}>
+            <p style={{ fontSize: "0.82rem", color: "var(--clr-text-muted, #8fa3bf)", marginBottom: "1rem" }}>
               Select a faculty or staff account below. New accounts are automatically provisioned with DepEd teacher privileges.
             </p>
 
@@ -195,13 +195,13 @@ export default function DepEdSSOModal({ onClose }: DepEdSSOModalProps) {
                     justifyContent: "space-between",
                     padding: "0.75rem 1rem",
                     borderRadius: "0.5rem",
-                    border: "1px solid var(--clr-border, #e2e8f0)",
-                    background: "var(--clr-surface-2, #f8fafc)",
+                    border: "1px solid var(--clr-border, #22334d)",
+                    background: "var(--clr-surface-2, #172338)",
                     cursor: loading ? "not-allowed" : "pointer",
                     transition: "all 0.15s ease",
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#2563eb")}
-                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--clr-border, #e2e8f0)")}
+                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--clr-accent, #f59e0b)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--clr-border, #22334d)")}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
                     <div
@@ -209,8 +209,9 @@ export default function DepEdSSOModal({ onClose }: DepEdSSOModalProps) {
                         width: 34,
                         height: 34,
                         borderRadius: "50%",
-                        background: "#e0e7ff",
-                        color: "#3730a3",
+                        background: "rgba(30, 64, 175, 0.25)",
+                        color: "#93c5fd",
+                        border: "1px solid rgba(59, 130, 246, 0.35)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -222,10 +223,10 @@ export default function DepEdSSOModal({ onClose }: DepEdSSOModalProps) {
                     </div>
                     <div>
                       <div style={{ fontWeight: 600, fontSize: "0.88rem" }}>{acc.name}</div>
-                      <div style={{ fontSize: "0.78rem", color: "#2563eb", fontFamily: "monospace" }}>
+                      <div style={{ fontSize: "0.78rem", color: "var(--clr-accent-light, #fbbf24)", fontFamily: "monospace" }}>
                         {acc.email}
                       </div>
-                      <div style={{ fontSize: "0.72rem", color: "var(--clr-text-muted, #64748b)" }}>
+                      <div style={{ fontSize: "0.72rem", color: "var(--clr-text-muted, #8fa3bf)" }}>
                         {acc.designation}
                       </div>
                     </div>

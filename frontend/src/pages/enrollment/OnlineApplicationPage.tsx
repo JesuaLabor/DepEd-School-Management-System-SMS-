@@ -227,9 +227,10 @@ export default function OnlineApplicationPage() {
                   width: "36px",
                   height: "36px",
                   borderRadius: "50%",
-                  background: step >= s.num ? "var(--clr-primary)" : "var(--clr-surface-2)",
+                  background: step > s.num ? "var(--clr-success)" : step === s.num ? "linear-gradient(135deg, var(--clr-primary), var(--clr-accent))" : "var(--clr-surface-2)",
                   color: step >= s.num ? "#fff" : "var(--clr-text-muted)",
-                  border: `2px solid ${step >= s.num ? "var(--clr-primary)" : "var(--clr-border)"}`,
+                  border: `2px solid ${step > s.num ? "var(--clr-success)" : step === s.num ? "var(--clr-accent)" : "var(--clr-border)"}`,
+                  boxShadow: step === s.num ? "0 0 12px var(--clr-primary-glow)" : "none",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -241,7 +242,7 @@ export default function OnlineApplicationPage() {
               >
                 {step > s.num ? "✓" : s.num}
               </div>
-              <span style={{ fontSize: "0.75rem", fontWeight: step === s.num ? 700 : 500, color: step >= s.num ? "var(--clr-text)" : "var(--clr-text-muted)" }}>
+              <span style={{ fontSize: "0.75rem", fontWeight: step === s.num ? 700 : 500, color: step === s.num ? "var(--clr-accent-light)" : step > s.num ? "var(--clr-text)" : "var(--clr-text-muted)" }}>
                 {s.label}
               </span>
             </div>
